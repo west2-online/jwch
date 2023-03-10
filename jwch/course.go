@@ -90,30 +90,3 @@ func (s *Student) GetSelectedCourse(term string) ([]*Course, error) {
 	// 第一个元素不需要
 	return res, nil
 }
-
-/*
-.
-├── README.md			// 文档
-├── cookies.txt
-├── errno				// 错误处理
-│   ├── code.go
-│   ├── default.go
-│   └── errno.go
-├── go.mod
-├── go.sum
-├── jwch				// 教务处类
-│   ├── course.go		// 课程
-│   ├── jwch.go			// 类主函数
-│   ├── mark.go			// 成绩
-│   ├── model.go		// 自定义结构体
-│   ├── user.go			// 用户
-│   └── xpath.go		// xpath优化函数
-├── main.go
-├── main.py				// python脚本
-├── photo.jpg			// 验证码图片(python use)
-├── test.html			// 测试html
-├── test.png			// 验证码图片
-└── utils				// 通用函数
-    └── utils.go
-
-*/
