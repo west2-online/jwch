@@ -56,9 +56,9 @@ Finally we can use `go run main.go` to test.
 
 # Current Progress
 
-- [x] User login
-- [x] Get course selections for each semester 
-- [x] Set any apis but not implement
+- [X] User login
+- [X] Get course selections for each semester
+- [X] Set any apis but not implement
 - [ ] Complete all apis
 - [ ] Benchmark test
 - [ ] Bug check & fix
@@ -70,13 +70,13 @@ Finally we can use `go run main.go` to test.
 .
 ├── README.md			// 文档
 ├── cookies.txt
-├── errno				// 错误处理
+├── errno			// 错误处理
 │   ├── code.go
 │   ├── default.go
 │   └── errno.go
 ├── go.mod
 ├── go.sum
-├── jwch				// 教务处类
+├── jwch			// 教务处类
 │   ├── course.go		// 课程
 │   ├── jwch.go			// 类主函数
 │   ├── mark.go			// 成绩
@@ -84,11 +84,10 @@ Finally we can use `go run main.go` to test.
 │   ├── user.go			// 用户
 │   └── xpath.go		// xpath优化函数
 ├── main.go
-├── main.py				// python脚本
+├── main.py			// python脚本
 ├── photo.jpg			// 验证码图片(python use)
 ├── test.html			// 测试html
 ├── test.png			// 验证码图片
-└── utils				// 通用函数
+└── utils			// 通用函数
     └── utils.go
 ```
-
