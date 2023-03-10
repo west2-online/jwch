@@ -8,6 +8,8 @@ We should clone this repo
 
 ```bash
 ❯ git clone https://github.com/fzuhelper/jwch
+❯ cd jwch
+❯ go mod tidy
 ```
 
 Then we just need to modify **main.go** to test any func.
