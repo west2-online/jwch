@@ -10,7 +10,7 @@ var (
 	AuthorizationFailedError = NewErrNo(AuthorizationFailedErrCode, "suthorization failed")
 
 	// User
-	UserExistedError      = NewErrNo(AuthorizationFailedErrCode, "user existed")
+	AccountConflictError  = NewErrNo(AuthorizationFailedErrCode, "account conflict")
 	SessionExpiredError   = NewErrNo(AuthorizationFailedErrCode, "session expired")
 	LoginCheckFailedError = NewErrNo(AuthorizationFailedErrCode, "login check failed")
 	SSOLoginFailedError   = NewErrNo(AuthorizationFailedErrCode, "sso login failed")

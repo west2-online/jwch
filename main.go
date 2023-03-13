@@ -5,14 +5,32 @@ import (
 	"jwch/jwch"
 	"jwch/utils"
 	"log"
+
+	"github.com/otiai10/gosseract/v2"
 )
 
 var res jwch.LoginData
 var localfile string = "logindata.txt"
 
+// test Image
+func test() {
+	client := gosseract.NewClient()
+	defer client.Close()
+
+	// client.SetImage("./photo.jpg")
+	// client.SetLanguage("chi_sim")
+	// text, err := client.Text()
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(text)
+}
+
 func main() {
+	test()
 	// 创建学生对象
-	stu := jwch.NewStudent().WithUser("", "")
+	stu := jwch.NewStudent().WithUser("052106112", "mima1216")
 
 	// 读取本地数据
 	solveErr(utils.JSONUnmarshalFromFile(localfile, &res))
@@ -20,10 +38,10 @@ func main() {
 	stu.WithSession(res.Session)
 
 	// 登录账号
-	if stu.CheckSession() != nil {
-		log.Println("session expire, relogin")
-		solveErr(stu.Login()) // 登录
-		log.Println("check session")
+	err := stu.CheckSession()
+	if err != nil {
+		log.Println(err.Error())
+		solveErr(stu.Login())        // 登录
 		solveErr(stu.CheckSession()) // 检查session
 		stu.SaveLoginData(localfile) // 保存到本地文件
 	}
@@ -40,9 +58,9 @@ func main() {
 	fmt.Println("course len:", len(list))
 
 	// 输出课程信息
-	for _, v := range list {
-		fmt.Println(utils.PrintStruct(v))
-	}
+	// for _, v := range list {
+	// 	fmt.Println(utils.PrintStruct(v))
+	// }
 
 }
 

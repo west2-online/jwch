@@ -5,13 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"reflect"
-
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
 )
 
 func SaveData(filePath string, data []byte) error {
@@ -28,15 +24,6 @@ func SaveData(filePath string, data []byte) error {
 	}
 
 	return nil
-}
-
-func Utf8ToGbk(s []byte) (string, error) {
-	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewEncoder())
-	d, e := ioutil.ReadAll(reader)
-	if e != nil {
-		return "", e
-	}
-	return string(d), nil
 }
 
 // Output struct as json format
@@ -66,7 +53,7 @@ func GetChineseCharacter(s string) string {
 	return result
 
 	// return regexp.MustCompile("[^\u4e00-\u9fa5]").ReplaceAllString(s, "")
-	// 经过测试，这两者没有什么区别
+	// After performance testing, there is no difference between the two methods
 }
 
 func RemoveDuplicate(data interface{}) interface{} {

@@ -109,8 +109,7 @@ func (s *Student) Login() error {
 		"ssologin": "",
 	}).Get("https://jwcjwxt2.fzu.edu.cn:81/loginchk_xs.aspx")
 
-	// 保存这部分Cookie，这部分Cookie是用来后续鉴权的
-	s.AppendCookies(resp.Request.RawRequest.Cookies())
+	// 保存这部分Cookie，这部分Cookie是用来后续鉴权的[ASP.NET_SessionId]
 	s.AppendCookies(resp.RawResponse.Cookies())
 
 	// 这里是err == nil 因为禁止了重定向，正常登录是会出现异常的
@@ -129,18 +128,29 @@ func (s *Student) Login() error {
 	return nil
 }
 
-// CheckSession returns if the session is available
+// CheckSession returns if the session is available and if the session is error for current ID
 func (s *Student) CheckSession() error {
-	_, err := s.GetWithSessionRaw("https://jwcjwxt2.fzu.edu.cn:81/top.aspx")
+	// 逻辑: 如果session没用，我们会返回一个302定向到https://jwcjwxt2.fzu.edu.cn:82/error.asp?id=300，但是我们禁用了重定向，意味着这里HTTP会抛出异常
+	// 旧版处理过程： 查询Body中是否含有[当前用户]这四个字
 
+	// 检查过期
+	resp, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/jcxx/xsxx/StudentInformation.aspx")
 	if err != nil {
 		return errno.SessionExpiredError
 	}
 
-	return nil
+	// 检查串号
+	res, err := htmlquery.Query(resp, `//*[@id="ContentPlaceHolder1_LB_xh"]`)
 
-	// 逻辑: 如果session没用，我们会返回一个302定向到https://jwcjwxt2.fzu.edu.cn:82/error.asp?id=300，但是我们禁用了重定向，意味着这里HTTP会抛出异常
-	// 旧版处理过程： 查询Body中是否含有[当前用户]这四个字
+	if err != nil {
+		return errno.SessionExpiredError.WithErr(err)
+	}
+
+	if htmlquery.OutputHTML(res, false) != s.ID {
+		return errno.AccountConflictError
+	}
+
+	return nil
 }
 
 // 获取学生个人信息
