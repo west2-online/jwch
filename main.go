@@ -30,7 +30,7 @@ func test() {
 func main() {
 	test()
 	// 创建学生对象
-	stu := jwch.NewStudent().WithUser("052106112", "mima1216")
+	stu := jwch.NewStudent().WithUser("", "")
 
 	// 读取本地数据
 	solveErr(utils.JSONUnmarshalFromFile(localfile, &res))
@@ -51,16 +51,26 @@ func main() {
 	solveErr(stu.GetTerms())
 
 	// 获取最新一学期的课程，按照terms排列可以获取各个学期的
-	list, err := stu.GetSelectedCourse(stu.Terms[0])
+	list, err := stu.GetSemesterCourses(stu.Terms[0])
 	solveErr(err)
 
 	// 输出课程数量
-	fmt.Println("course len:", len(list))
+	fmt.Println("course num:", len(list))
+	for _, v := range list {
+		fmt.Println(utils.PrintStruct(v))
+	}
+
+	// 获取个人信息
+	detail, err := stu.GetInfo()
+	solveErr(err)
+	fmt.Println(utils.PrintStruct(detail))
+
+	// 获取成绩
+	marks, err := stu.GetMarks()
+	solveErr(err)
+	fmt.Println(utils.PrintStruct(marks))
 
 	// 输出课程信息
-	// for _, v := range list {
-	// 	fmt.Println(utils.PrintStruct(v))
-	// }
 
 }
 

@@ -128,7 +128,7 @@ func (s *Student) Login() error {
 	return nil
 }
 
-// CheckSession returns if the session is available and if the session is error for current ID
+// CheckSession returns not nil if SessionExpired or AccountConflict
 func (s *Student) CheckSession() error {
 	// 逻辑: 如果session没用，我们会返回一个302定向到https://jwcjwxt2.fzu.edu.cn:82/error.asp?id=300，但是我们禁用了重定向，意味着这里HTTP会抛出异常
 	// 旧版处理过程： 查询Body中是否含有[当前用户]这四个字
@@ -136,13 +136,13 @@ func (s *Student) CheckSession() error {
 	// 检查过期
 	resp, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/jcxx/xsxx/StudentInformation.aspx")
 	if err != nil {
-		return errno.SessionExpiredError
+		return err
 	}
 
 	// 检查串号
-	res, err := htmlquery.Query(resp, `//*[@id="ContentPlaceHolder1_LB_xh"]`)
+	res := htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_LB_xh"]`)
 
-	if err != nil {
+	if res == nil {
 		return errno.SessionExpiredError.WithErr(err)
 	}
 
@@ -154,13 +154,29 @@ func (s *Student) CheckSession() error {
 }
 
 // 获取学生个人信息
-func (s *Student) GetInfo() error {
-	resp, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/jcxx/xsxx/StudentInformation.aspx")
+func (s *Student) GetInfo() (resp *StudentDetail, err error) {
+	res, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/jcxx/xsxx/StudentInformation.aspx")
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	utils.SaveData("test.html", []byte(htmlquery.OutputHTML(resp, true)))
-	return nil
+	resp = &StudentDetail{
+		Birthday:         SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_csrq"]`),
+		Sex:              SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xb"]`),
+		Phone:            SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_lxdh"]`),
+		Email:            SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_email"]`),
+		College:          SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xymc"]`),
+		Grade:            SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_nj"]`),
+		StatusChanges:    SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xjxx"]`),
+		Major:            SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_zymc"]`),
+		Counselor:        SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_zdy"]`),
+		ExamineeCategory: SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_kslb"]`),
+		Nationality:      SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_mz"]`),
+		Country:          SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_gb"]`),
+		PoliticalStatus:  SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_zzmm"]`),
+		Source:           SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xssy"]`),
+	}
+
+	return resp, nil
 }

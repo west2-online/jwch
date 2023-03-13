@@ -35,7 +35,7 @@ func (s *Student) GetTerms() error {
 }
 
 // 获取我的选课
-func (s *Student) GetSelectedCourse(term string) ([]*Course, error) {
+func (s *Student) GetSemesterCourses(term string) ([]*Course, error) {
 
 	resp, err := s.PostWithSession("https://jwcjwxt2.fzu.edu.cn:81/student/xkjg/wdxk/xkjg_list.aspx", map[string]string{
 		"ctl00$ContentPlaceHolder1$DDL_xnxq":  term,
@@ -48,7 +48,6 @@ func (s *Student) GetSelectedCourse(term string) ([]*Course, error) {
 		return nil, err
 	}
 
-	// list := htmlquery.Find(htmlquery.FindOne(htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_DataList_xxk"]`), "tbody"), "tr")
 	list := htmlquery.Find(htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_DataList_xxk"]/tbody`), "tr")
 
 	// 去除第一个元素，第一个元素是标题栏，有个判断文本是“课程名称”
@@ -74,17 +73,17 @@ func (s *Student) GetSelectedCourse(term string) ([]*Course, error) {
 		res = append(res, &Course{
 			Type:          htmlquery.OutputHTML(info[0], false),
 			Name:          htmlquery.OutputHTML(info[1], false),
-			Syllabus:      "https://jwcjwxt2.fzu.edu.cn:81" + SafeExtractByRegex(`javascript:pop1\('(.*?)&`, SafeExtractionValue(info[2], "a", "href", 0)),
-			LessonPlan:    "https://jwcjwxt2.fzu.edu.cn:81" + SafeExtractByRegex(`javascript:pop1\('(.*?)&`, SafeExtractionValue(info[2], "a", "href", 1)),
+			Syllabus:      "https://jwcjwxt2.fzu.edu.cn:81" + SafeExtractRegex(`javascript:pop1\('(.*?)&`, SafeExtractionValue(info[2], "a", "href", 0)),
+			LessonPlan:    "https://jwcjwxt2.fzu.edu.cn:81" + SafeExtractRegex(`javascript:pop1\('(.*?)&`, SafeExtractionValue(info[2], "a", "href", 1)),
 			PaymentStatus: SafeExtractionFirst(info[3], "font"),
-			Credit:        SafeExtractionFirst(info[4], "span"),
+			Credits:       SafeExtractionFirst(info[4], "span"),
 			ElectiveType:  utils.GetChineseCharacter(htmlquery.OutputHTML(info[5], false)),
 			ExamType:      utils.GetChineseCharacter(htmlquery.OutputHTML(info[6], false)),
 			Teacher:       htmlquery.OutputHTML(info[7], false),
 			Classroom:     strings.TrimSpace(htmlquery.InnerText(info[8])),
 			ExamTime:      strings.TrimSpace(htmlquery.InnerText(info[9])),
 			Remark:        htmlquery.OutputHTML(info[10], false),
-			AdjustInfo:    htmlquery.OutputHTML(info[11], false),
+			Adjust:        htmlquery.OutputHTML(info[11], false),
 		})
 	}
 

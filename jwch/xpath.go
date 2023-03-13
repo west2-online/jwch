@@ -11,10 +11,11 @@ import (
 func SafeExtractionFirst(node *html.Node, expr string) string {
 	res := htmlquery.FindOne(node, expr)
 
-	if res != nil {
-		return htmlquery.OutputHTML(res, false)
+	if res == nil {
+		return htmlquery.OutputHTML(node, false)
 	}
-	return ""
+
+	return htmlquery.OutputHTML(res, false)
 }
 
 // Safely extract data from html node by expression, return the index-th element(if index is out of range, return the last element)
@@ -32,7 +33,7 @@ func SafeExtractionValue(node *html.Node, expr string, value string, index int) 
 	return htmlquery.SelectAttr(res[index], value)
 }
 
-func SafeExtractByRegex(regex, str string) string {
+func SafeExtractRegex(regex, str string) string {
 	res := regexp.MustCompile(regex).FindStringSubmatch(str)
 
 	if len(res) < 2 {
@@ -40,4 +41,15 @@ func SafeExtractByRegex(regex, str string) string {
 	}
 
 	return res[1]
+}
+
+func SafeExtractHTMLFirst(node *html.Node, expr string) string {
+	res := htmlquery.FindOne(node, expr)
+
+	if res == nil {
+		return ""
+	}
+
+	return htmlquery.OutputHTML(res, false)
+
 }
