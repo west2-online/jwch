@@ -1,26 +1,46 @@
 package jwch
 
 import (
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 )
 
+// 本地数据
+type LoginData struct {
+	Cookies []*http.Cookie
+	Session string
+}
+
 // 学生对象
 type Student struct {
-	ID              string        `json:"id"`              // 学号
-	Password        string        `json:"password"`        // 密码
-	Session         string        `json:"session"`         // 会话ID
-	Terms           []string      `json:"terms"`           // 学期
-	ViewState       string        `json:"viewstate"`       // 课表必要信息
-	EventValidation string        `json:"eventvalidation"` // 课表必要信息
-	client          *resty.Client // Request 对象
+	ID              string         `json:"id"`              // 学号
+	Password        string         `json:"password"`        // 密码
+	Session         string         `json:"session"`         // 会话ID
+	Terms           []string       `json:"terms"`           // 学期数量
+	ViewState       string         `json:"viewstate"`       // 课表必要信息
+	EventValidation string         `json:"eventvalidation"` // 课表必要信息
+	client          *resty.Client  // Request 对象
+	Cookies         []*http.Cookie // Cookies
 	// c        *colly.Collector // Colly 对象
 }
 
-// SSO登录返回
-type SSOLoginResponse struct {
-	Code int    `json:"code"` // 状态码
-	Info string `json:"info"` // 返回消息
-	// Data interface{} `json:"data"`
+// 学生信息详情
+type StudentDetail struct {
+	Nickname         string `json:"nickname"`          // 昵称
+	Signature        string `json:"signature"`         // 签名
+	Sex              string `json:"sex"`               // 性别
+	Birthday         string `json:"birthday"`          // 出生日期
+	Phone            string `json:"phont"`             // 手机号
+	Email            string `json:"email"`             // 邮箱
+	College          string `json:"college"`           // 学院
+	Grade            string `json:"grade"`             // 年级
+	StatusChanges    string `json:"status_change"`     // 学籍异动与奖励
+	Major            string `json:"major"`             // 专业
+	Counselor        string `json:"counselor"`         // 辅导员
+	ExamineeCategory string `json:"examinee_category"` // 考生类别
+	Nationality      string `json:"nationality"`       // 民族
+	Country          string `json:"country"`           // 国别
 }
 
 // 课程信息

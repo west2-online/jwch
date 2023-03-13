@@ -1,0 +1,47 @@
+{
+    "Cookies": [
+        {
+            "Name": "Learun_ADMS_V7_Mark",
+            "Value": "1e131a32-9901-4ff0-b0d3-9dd7bb957e99",
+            "Path": "",
+            "Domain": "",
+            "Expires": "0001-01-01T00:00:00Z",
+            "RawExpires": "",
+            "MaxAge": 0,
+            "Secure": false,
+            "HttpOnly": false,
+            "SameSite": 0,
+            "Raw": "",
+            "Unparsed": null
+        },
+        {
+            "Name": "Learun_ADMS_V7_Token",
+            "Value": "c4ef60e5-c4bf-4b05-bbf5-dd49e083a2bf",
+            "Path": "",
+            "Domain": "",
+            "Expires": "0001-01-01T00:00:00Z",
+            "RawExpires": "",
+            "MaxAge": 0,
+            "Secure": false,
+            "HttpOnly": false,
+            "SameSite": 0,
+            "Raw": "",
+            "Unparsed": null
+        },
+        {
+            "Name": "ASP.NET_SessionId",
+            "Value": "jecwtosaxnwlsexcn3xads1q",
+            "Path": "/",
+            "Domain": "",
+            "Expires": "0001-01-01T00:00:00Z",
+            "RawExpires": "",
+            "MaxAge": 0,
+            "Secure": false,
+            "HttpOnly": true,
+            "SameSite": 2,
+            "Raw": "ASP.NET_SessionId=jecwtosaxnwlsexcn3xads1q; path=/; HttpOnly; SameSite=Lax",
+            "Unparsed": null
+        }
+    ],
+    "Session": "202331402844052106112"
+}

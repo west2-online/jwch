@@ -1,9 +1,9 @@
 package jwch
 
 import (
+	"jwch/errno"
+	"jwch/utils"
 	"strings"
-	"test/errno"
-	"test/utils"
 
 	"github.com/antchfx/htmlquery"
 )
@@ -22,6 +22,7 @@ func (s *Student) GetTerms() error {
 	// 获取学年学期，例如 202202/202201/202102/202101 需要获取value
 	list := htmlquery.Find(resp, `//*[@id="ContentPlaceHolder1_DDL_xnxq"]/option/@value`)
 
+	// 这里考虑过使用 len(list) < 1，但是实际上这没必要，因为小于1那么它必定是0
 	if len(list) == 0 {
 		return errno.HTMLParseError.WithMessage("empty terms")
 	}
@@ -47,7 +48,8 @@ func (s *Student) GetSelectedCourse(term string) ([]*Course, error) {
 		return nil, err
 	}
 
-	list := htmlquery.Find(htmlquery.FindOne(htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_DataList_xxk"]`), "tbody"), "tr")
+	// list := htmlquery.Find(htmlquery.FindOne(htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_DataList_xxk"]`), "tbody"), "tr")
+	list := htmlquery.Find(htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_DataList_xxk"]/tbody`), "tr")
 
 	// 去除第一个元素，第一个元素是标题栏，有个判断文本是“课程名称”
 	// TODO: 我们如何确保第一个元素一定是标题栏?
@@ -56,20 +58,19 @@ func (s *Student) GetSelectedCourse(term string) ([]*Course, error) {
 	res := make([]*Course, 0)
 
 	for _, node := range list {
+
+		// 教务处的表格HTML是不规范的，因此XPath解析会出现一些BUG
 		if strings.TrimSpace(htmlquery.SelectAttr(node, "style")) == "" {
 			continue
 		}
 		info := htmlquery.Find(node, `td`) // 一行的所有信息
 
+		// 这个表格有12栏
 		if len(info) < 12 {
-			for _, n := range info {
-				println(n.Data)
-			}
 			return nil, errno.HTMLParseError.WithMessage("get course info failed")
 		}
 
 		// TODO: performance optimization
-
 		res = append(res, &Course{
 			Type:          htmlquery.OutputHTML(info[0], false),
 			Name:          htmlquery.OutputHTML(info[1], false),
@@ -87,6 +88,5 @@ func (s *Student) GetSelectedCourse(term string) ([]*Course, error) {
 		})
 	}
 
-	// 第一个元素不需要
 	return res, nil
 }

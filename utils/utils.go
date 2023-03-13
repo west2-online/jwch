@@ -2,10 +2,13 @@ package utils
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
+	"reflect"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -63,4 +66,40 @@ func GetChineseCharacter(s string) string {
 	return result
 
 	// return regexp.MustCompile("[^\u4e00-\u9fa5]").ReplaceAllString(s, "")
+	// 经过测试，这两者没有什么区别
+}
+
+func RemoveDuplicate(data interface{}) interface{} {
+	inArr := reflect.ValueOf(data)
+	if inArr.Kind() != reflect.Slice && inArr.Kind() != reflect.Array {
+		return data // 不是数组/切片
+	}
+
+	existMap := make(map[interface{}]bool)
+	outArr := reflect.MakeSlice(inArr.Type(), 0, inArr.Len())
+
+	for i := 0; i < inArr.Len(); i++ {
+		iVal := inArr.Index(i)
+
+		if _, ok := existMap[iVal.Interface()]; !ok {
+			outArr = reflect.Append(outArr, inArr.Index(i))
+			existMap[iVal.Interface()] = true
+		}
+	}
+
+	return outArr.Interface()
+}
+
+func Base64EncodeHTTPImage(data []byte) string {
+	return "data:" + http.DetectContentType(data) + "base64," + base64.StdEncoding.EncodeToString(data)
+}
+
+func JSONUnmarshalFromFile(filePath string, v any) error {
+	data, err := os.ReadFile(filePath)
+
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(data, v)
 }
