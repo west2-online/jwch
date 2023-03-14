@@ -11,3 +11,4 @@
 
 ## Built-in default error
 
+Visit ./errno/default.go for more Info.

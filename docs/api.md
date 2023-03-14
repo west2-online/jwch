@@ -33,9 +33,7 @@ func (s *Student) GetMarks() (resp []*Mark, err error) {}
 func (s *Student) GetCET() error {}
 ```
 
-
-
-# Sample
+# Usage example
 
 ```go
 package main
@@ -62,7 +60,7 @@ func main() {
 	// 登录账号
 	err := stu.CheckSession()
 	if err != nil {
-		log.Println(err.Error())		 // 输出错误
+		log.Println(err.Error())    // 输出错误
 		solveErr(stu.Login())        // 登录
 		solveErr(stu.CheckSession()) // 检查session
 		stu.SaveLoginData(localfile) // 保存到本地文件
@@ -101,4 +99,3 @@ func solveErr(err error) {
 	}
 }
 ```
-

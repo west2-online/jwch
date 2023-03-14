@@ -12,12 +12,10 @@ This is an interface encapsulation class of Fuzhou University Academic Affairs O
 
 # How to use
 
-We should clone this repo
+We use this repo as an 
 
 ```bash
-❯ git clone https://github.com/fzuhelper/jwch
-❯ cd jwch
-❯ go mod tidy
+❯ go get github.com/west2-online/jwch
 ```
 
 Then we just need to modify **main.go** to test any func.

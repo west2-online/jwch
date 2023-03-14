@@ -2,7 +2,7 @@
     "cookies": [
         {
             "Name": "ASP.NET_SessionId",
-            "Value": "t45w54bpdw2f05cfnepho3zw",
+            "Value": "1soqnddidmy2ynqvhx02vuqy",
             "Path": "/",
             "Domain": "",
             "Expires": "0001-01-01T00:00:00Z",
@@ -11,9 +11,9 @@
             "Secure": false,
             "HttpOnly": true,
             "SameSite": 2,
-            "Raw": "ASP.NET_SessionId=t45w54bpdw2f05cfnepho3zw; path=/; HttpOnly; SameSite=Lax",
+            "Raw": "ASP.NET_SessionId=1soqnddidmy2ynqvhx02vuqy; path=/; HttpOnly; SameSite=Lax",
             "Unparsed": null
         }
     ],
-    "session": "202331414950052106112"
+    "session": "2023314233350052106112"
 }
