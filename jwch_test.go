@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/west2-onlin/jwch/utils"
+	"github.com/west2-online/jwch/utils"
 )
 
 const (

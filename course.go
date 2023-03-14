@@ -3,8 +3,8 @@ package jwch
 import (
 	"strings"
 
-	"github.com/west2-onlin/jwch/errno"
-	"github.com/west2-onlin/jwch/utils"
+	"github.com/west2-online/jwch/errno"
+	"github.com/west2-online/jwch/utils"
 
 	"github.com/antchfx/htmlquery"
 )
