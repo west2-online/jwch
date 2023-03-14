@@ -2,8 +2,9 @@ package jwch
 
 import (
 	"fmt"
-	"jwch/utils"
 	"testing"
+
+	"github.com/west2-onlin/jwch/utils"
 )
 
 const (

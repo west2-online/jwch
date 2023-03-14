@@ -3,10 +3,11 @@ package jwch
 import (
 	"bytes"
 	"crypto/tls"
-	"jwch/errno"
-	"jwch/utils"
 	"net/http"
 	"strings"
+
+	"github.com/west2-onlin/jwch/errno"
+	"github.com/west2-onlin/jwch/utils"
 
 	"github.com/antchfx/htmlquery"
 	"github.com/go-resty/resty/v2"

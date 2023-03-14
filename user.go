@@ -2,9 +2,10 @@ package jwch
 
 import (
 	"encoding/json"
-	"jwch/errno"
-	"jwch/utils"
 	"regexp"
+
+	"github.com/west2-onlin/jwch/errno"
+	"github.com/west2-onlin/jwch/utils"
 
 	"github.com/antchfx/htmlquery"
 )

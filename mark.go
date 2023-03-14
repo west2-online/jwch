@@ -2,9 +2,10 @@ package jwch
 
 import (
 	"fmt"
-	"jwch/errno"
-	"jwch/utils"
 	"strings"
+
+	"github.com/west2-onlin/jwch/errno"
+	"github.com/west2-onlin/jwch/utils"
 
 	"github.com/antchfx/htmlquery"
 )
