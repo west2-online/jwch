@@ -34,8 +34,7 @@ func main() {
 
 	// 读取本地数据
 	solveErr(utils.JSONUnmarshalFromFile(localfile, &res))
-	stu.SetCookies(res.Cookies)
-	stu.WithSession(res.Session)
+	stu.SetLoginData(res)
 
 	// 登录账号
 	err := stu.CheckSession()
@@ -48,13 +47,14 @@ func main() {
 
 	// 需要先获取学期列表才能选择我的选课
 	// 对于客户端，可以GetTerms后存在本地，这样可以直接进行获取课程的请求
-	solveErr(stu.GetTerms())
-
-	// 获取最新一学期的课程，按照terms排列可以获取各个学期的
-	list, err := stu.GetSemesterCourses(stu.Terms[0])
+	term, err := stu.GetTerms()
 	solveErr(err)
 
-	// 输出课程数量
+	// 获取最新一学期的课程，按照terms排列可以获取各个学期的
+	list, err := stu.GetSemesterCourses(term.Terms[0], term.ViewState, term.EventValidation)
+	solveErr(err)
+
+	// 输出课程数量与信息
 	fmt.Println("course num:", len(list))
 	for _, v := range list {
 		fmt.Println(utils.PrintStruct(v))
@@ -69,8 +69,6 @@ func main() {
 	marks, err := stu.GetMarks()
 	solveErr(err)
 	fmt.Println(utils.PrintStruct(marks))
-
-	// 输出课程信息
 
 }
 

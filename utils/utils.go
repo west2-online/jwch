@@ -81,6 +81,10 @@ func Base64EncodeHTTPImage(data []byte) string {
 	return "data:" + http.DetectContentType(data) + "base64," + base64.StdEncoding.EncodeToString(data)
 }
 
+func StructJSONEncodeBase64(data interface{}) string {
+	return base64.StdEncoding.EncodeToString([]byte(PrintStruct(data)))
+}
+
 func JSONUnmarshalFromFile(filePath string, v any) error {
 	data, err := os.ReadFile(filePath)
 

@@ -18,12 +18,6 @@ func NewStudent() *Student {
 	// Disable Redirect
 	client := resty.New().SetTransport(&http.Transport{TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper)}).SetRedirectPolicy(resty.NoRedirectPolicy())
 
-	// client = client.OnAfterResponse(func(c *resty.Client, r *resty.Response) error {
-	// 	fmt.Println("\n\nRequest:\n", r.Request.RawRequest)
-	// 	fmt.Println("Response:\n", r.RawResponse)
-	// 	return nil // if its success otherwise return error
-	// })
-
 	return &Student{
 		client: client,
 	}
@@ -37,30 +31,31 @@ func (s *Student) WithUser(id, password string) *Student {
 }
 
 func (s *Student) WithSession(session string) *Student {
-	s.Session = session
+	s.LoginData.Session = session
 	return s
 }
 
 // SaveLoginData save session and cookie to localfile
 func (s *Student) SaveLoginData(filePath string) error {
-	return utils.SaveData(filePath, []byte(utils.PrintStruct(LoginData{
-		Cookies: s.Cookies,
-		Session: s.Session,
-	})))
+	return utils.SaveData(filePath, []byte(utils.PrintStruct(s.LoginData)))
 }
 
-func (s *Student) ClearCookies() {
-	s.Cookies = make([]*http.Cookie, 0)
-	s.client.Cookies = s.Cookies
+func (s *Student) GetLoginDataJSON() string {
+	return utils.PrintStruct(s.LoginData)
 }
 
-func (s *Student) SetCookies(cookies []*http.Cookie) {
-	s.AppendCookies(cookies)
-	s.client = s.client.SetCookies(cookies)
+func (s *Student) ClearLoginData() {
+	s.LoginData = LoginData{}
+	s.client.Cookies = s.LoginData.Cookies
+}
+
+func (s *Student) SetLoginData(data LoginData) {
+	s.LoginData = data
+	s.client = s.client.SetCookies(s.LoginData.Cookies)
 }
 
 func (s *Student) AppendCookies(cookies []*http.Cookie) {
-	s.Cookies = append(s.Cookies, cookies...)
+	s.LoginData.Cookies = append(s.LoginData.Cookies, cookies...)
 }
 
 func (s *Student) NewRequest() *resty.Request {
@@ -69,7 +64,7 @@ func (s *Student) NewRequest() *resty.Request {
 
 // GetWithSession returns parse tree for the resp of the request.
 func (s *Student) GetWithSession(url string) (*html.Node, error) {
-	resp, err := s.NewRequest().SetHeader("Referer", "https://jwcjwxt1.fzu.edu.cn/").SetQueryParam("id", s.Session).Get(url)
+	resp, err := s.NewRequest().SetHeader("Referer", "https://jwcjwxt1.fzu.edu.cn/").SetQueryParam("id", s.LoginData.Session).Get(url)
 
 	if err != nil {
 		return nil, errno.HTTPQueryError.WithErr(err)
@@ -85,7 +80,7 @@ func (s *Student) GetWithSession(url string) (*html.Node, error) {
 
 // GetWithSessionRaw returns the raw data of response
 func (s *Student) GetWithSessionRaw(url string) (*resty.Response, error) {
-	resp, err := s.NewRequest().SetHeader("Referer", "https://jwcjwxt1.fzu.edu.cn/").SetQueryParam("id", s.Session).Get(url)
+	resp, err := s.NewRequest().SetHeader("Referer", "https://jwcjwxt1.fzu.edu.cn/").SetQueryParam("id", s.LoginData.Session).Get(url)
 
 	if err != nil {
 		return nil, errno.HTTPQueryError.WithErr(err)
@@ -101,7 +96,7 @@ func (s *Student) GetWithSessionRaw(url string) (*resty.Response, error) {
 
 // PostWithSession returns parse tree for the resp of the request.
 func (s *Student) PostWithSession(url string, formdata map[string]string) (*html.Node, error) {
-	resp, err := s.NewRequest().SetHeader("Referer", "https://jwcjwxt1.fzu.edu.cn/").SetQueryParam("id", s.Session).SetFormData(formdata).Post(url)
+	resp, err := s.NewRequest().SetHeader("Referer", "https://jwcjwxt1.fzu.edu.cn/").SetQueryParam("id", s.LoginData.Session).SetFormData(formdata).Post(url)
 
 	s.NewRequest().EnableTrace()
 
@@ -113,8 +108,6 @@ func (s *Student) PostWithSession(url string, formdata map[string]string) (*html
 	if strings.Contains(string(resp.Body()), "处理URL失败") {
 		return nil, errno.SessionExpiredError
 	}
-
-	// utils.SaveData("test.html", resp.Body()) // 保存到本地查看网页
 
 	return htmlquery.Parse(strings.NewReader(strings.TrimSpace(string(resp.Body()))))
 }

@@ -10,23 +10,23 @@ import (
 )
 
 // SSO登录返回
-type SSOLoginResponse struct {
+type ssoLoginResponse struct {
 	Code int    `json:"code"` // 状态码
 	Info string `json:"info"` // 返回消息
 	// Data interface{} `json:"data"`
 }
 
-type VerifyCodeResponse struct {
+type verifyCodeResponse struct {
 	Message string `json:"message"`
 }
 
 // 模拟教务处登录/刷新Session
 func (s *Student) Login() error {
 	// 清除cookie
-	s.ClearCookies()
+	s.ClearLoginData()
 
-	code := VerifyCodeResponse{}
-	loginResp := SSOLoginResponse{}
+	code := verifyCodeResponse{}
+	loginResp := ssoLoginResponse{}
 
 	// 获取验证码图片
 	resp, err := s.NewRequest().Get("https://jwcjwxt1.fzu.edu.cn/plus/verifycode.asp")
@@ -162,20 +162,20 @@ func (s *Student) GetInfo() (resp *StudentDetail, err error) {
 	}
 
 	resp = &StudentDetail{
-		Birthday:         SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_csrq"]`),
-		Sex:              SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xb"]`),
-		Phone:            SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_lxdh"]`),
-		Email:            SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_email"]`),
-		College:          SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xymc"]`),
-		Grade:            SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_nj"]`),
-		StatusChanges:    SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xjxx"]`),
-		Major:            SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_zymc"]`),
-		Counselor:        SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_zdy"]`),
-		ExamineeCategory: SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_kslb"]`),
-		Nationality:      SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_mz"]`),
-		Country:          SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_gb"]`),
-		PoliticalStatus:  SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_zzmm"]`),
-		Source:           SafeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xssy"]`),
+		Birthday:         safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_csrq"]`),
+		Sex:              safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xb"]`),
+		Phone:            safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_lxdh"]`),
+		Email:            safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_email"]`),
+		College:          safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xymc"]`),
+		Grade:            safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_nj"]`),
+		StatusChanges:    safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xjxx"]`),
+		Major:            safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_zymc"]`),
+		Counselor:        safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_zdy"]`),
+		ExamineeCategory: safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_kslb"]`),
+		Nationality:      safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_mz"]`),
+		Country:          safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_gb"]`),
+		PoliticalStatus:  safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_zzmm"]`),
+		Source:           safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xssy"]`),
 	}
 
 	return resp, nil

@@ -9,39 +9,41 @@ import (
 )
 
 // 获取我的学期
-func (s *Student) GetTerms() error {
+func (s *Student) GetTerms() (*Term, error) {
 	resp, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/student/xkjg/wdxk/xkjg_list.aspx")
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	s.ViewState = htmlquery.SelectAttr(htmlquery.FindOne(resp, `//*[@id="__VIEWSTATE"]`), "value")
-	s.EventValidation = htmlquery.SelectAttr(htmlquery.FindOne(resp, `//*[@id="__EVENTVALIDATION"]`), "value")
+	res := &Term{}
+
+	res.ViewState = htmlquery.SelectAttr(htmlquery.FindOne(resp, `//*[@id="__VIEWSTATE"]`), "value")
+	res.EventValidation = htmlquery.SelectAttr(htmlquery.FindOne(resp, `//*[@id="__EVENTVALIDATION"]`), "value")
 
 	// 获取学年学期，例如 202202/202201/202102/202101 需要获取value
 	list := htmlquery.Find(resp, `//*[@id="ContentPlaceHolder1_DDL_xnxq"]/option/@value`)
 
 	// 这里考虑过使用 len(list) < 1，但是实际上这没必要，因为小于1那么它必定是0
 	if len(list) == 0 {
-		return errno.HTMLParseError.WithMessage("empty terms")
+		return nil, errno.HTMLParseError.WithMessage("empty terms")
 	}
 
 	for _, node := range list {
-		s.Terms = append(s.Terms, htmlquery.SelectAttr(node, "value"))
+		res.Terms = append(res.Terms, htmlquery.SelectAttr(node, "value"))
 	}
 
-	return nil
+	return res, nil
 }
 
 // 获取我的选课
-func (s *Student) GetSemesterCourses(term string) ([]*Course, error) {
+func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([]*Course, error) {
 
 	resp, err := s.PostWithSession("https://jwcjwxt2.fzu.edu.cn:81/student/xkjg/wdxk/xkjg_list.aspx", map[string]string{
 		"ctl00$ContentPlaceHolder1$DDL_xnxq":  term,
 		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
-		"__VIEWSTATE":                         s.ViewState,
-		"__EVENTVALIDATION":                   s.EventValidation,
+		"__VIEWSTATE":                         viewState,
+		"__EVENTVALIDATION":                   eventValidation,
 	})
 
 	if err != nil {
@@ -73,10 +75,10 @@ func (s *Student) GetSemesterCourses(term string) ([]*Course, error) {
 		res = append(res, &Course{
 			Type:          htmlquery.OutputHTML(info[0], false),
 			Name:          htmlquery.OutputHTML(info[1], false),
-			Syllabus:      "https://jwcjwxt2.fzu.edu.cn:81" + SafeExtractRegex(`javascript:pop1\('(.*?)&`, SafeExtractionValue(info[2], "a", "href", 0)),
-			LessonPlan:    "https://jwcjwxt2.fzu.edu.cn:81" + SafeExtractRegex(`javascript:pop1\('(.*?)&`, SafeExtractionValue(info[2], "a", "href", 1)),
-			PaymentStatus: SafeExtractionFirst(info[3], "font"),
-			Credits:       SafeExtractionFirst(info[4], "span"),
+			Syllabus:      "https://jwcjwxt2.fzu.edu.cn:81" + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 0)),
+			LessonPlan:    "https://jwcjwxt2.fzu.edu.cn:81" + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 1)),
+			PaymentStatus: safeExtractionFirst(info[3], "font"),
+			Credits:       safeExtractionFirst(info[4], "span"),
 			ElectiveType:  utils.GetChineseCharacter(htmlquery.OutputHTML(info[5], false)),
 			ExamType:      utils.GetChineseCharacter(htmlquery.OutputHTML(info[6], false)),
 			Teacher:       htmlquery.OutputHTML(info[7], false),

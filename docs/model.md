@@ -1,26 +1,26 @@
-package jwch
+# LoginData
 
-import (
-	"net/http"
-
-	"github.com/go-resty/resty/v2"
-)
-
-// 本地数据
+```go
 type LoginData struct {
 	Cookies []*http.Cookie `json:"cookies"`
 	Session string         `json:"session"`
 }
+```
 
-// 学生对象
+# Student
+
+```go
 type Student struct {
 	ID        string        `json:"id"`         // 学号
 	Password  string        `json:"password"`   // 密码
 	LoginData LoginData     `json:"login_data"` // 登录凭证
 	client    *resty.Client // Request对象
 }
+```
 
-// 学生信息详情
+# StudentDetail
+
+```go
 type StudentDetail struct {
 	Sex              string `json:"sex"`               // 性别
 	Birthday         string `json:"birthday"`          // 出生日期
@@ -37,15 +37,21 @@ type StudentDetail struct {
 	PoliticalStatus  string `json:"political_status"`  // 政治面貌
 	Source           string `json:"source"`            // 生源地
 }
+```
 
-// 学期信息
+# Term
+
+```go
 type Term struct {
 	Terms           []string `json:"terms"`           // 学期数量
 	ViewState       string   `json:"viewstate"`       // 课表必要信息
 	EventValidation string   `json:"eventvalidation"` // 课表必要信息
 }
+```
 
-// 课程信息
+# Course
+
+```go
 type Course struct {
 	Type          string `json:"type"`          // 修读类别
 	Name          string `json:"name"`          // 课程名称
@@ -61,7 +67,11 @@ type Course struct {
 	Remark        string `json:"remark"`        // 备注
 	Adjust        string `json:"adjust"`        // 调课信息
 }
+```
 
+# Mark
+
+```go
 type Mark struct {
 	Type          string `json:"type"`           // 修读类别
 	Semester      string `json:"semester"`       // 开课学期
@@ -76,3 +86,4 @@ type Mark struct {
 	Classroom     string `json:"classroom"`      // 上课时间地点
 	ExamTime      string `json:"examtime"`       // 考试时间地点
 }
+```
