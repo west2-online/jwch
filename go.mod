@@ -1,4 +1,4 @@
-module github.com/west2-onlin/jwch
+module github.com/west2-online/jwch
 
 go 1.20
 
