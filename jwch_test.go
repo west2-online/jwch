@@ -8,14 +8,14 @@ import (
 )
 
 const (
-	username = "username" // 学号
-	password = "password" // 密码
+	username  = "username" // 学号
+	password  = "password" // 密码
+	localfile = "logindata.txt"
 )
 
 var (
-	islogin   bool     = false
-	localfile string   = "logindata.txt"
-	stu       *Student = NewStudent().WithUser(username, password)
+	islogin bool     = false
+	stu     *Student = NewStudent().WithUser(username, password)
 )
 
 func login() error {
