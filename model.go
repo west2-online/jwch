@@ -76,3 +76,11 @@ type Mark struct {
 	Classroom     string `json:"classroom"`      // 上课时间地点
 	ExamTime      string `json:"examtime"`       // 考试时间地点
 }
+
+// 空教室请求
+type EmptyRoomReq struct {
+	Time  string `form:"time" binding:"required"` // 日期 格式:2023-09-22
+	Start string `form:"start" binding:"required"`
+	End   string `form:"end" binding:"required"`   // 查询第Start节到第End节
+	Build string `form:"build" binding:"required"` // 教学楼名
+}
