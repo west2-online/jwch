@@ -132,3 +132,24 @@ func Test_GetMarks(t *testing.T) {
 
 	fmt.Println(utils.PrintStruct(marks))
 }
+
+func Test_GetEmptyRoom(t *testing.T) {
+	if !islogin {
+		err := login()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	err, rooms := stu.GetEmptyRoom(EmptyRoomReq{
+		Time:  "2023-09-22",
+		Start: "1",
+		End:   "2",
+		Build: "x3",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(rooms))
+}
