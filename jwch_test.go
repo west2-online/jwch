@@ -142,10 +142,10 @@ func Test_GetEmptyRoom(t *testing.T) {
 	}
 
 	err, rooms := stu.GetEmptyRoom(EmptyRoomReq{
-		Time:  "2023-09-22",
-		Start: "1",
-		End:   "2",
-		Build: "x3",
+		Time:     "2023-09-22",
+		Start:    "1",
+		End:      "2",
+		Building: "x3",
 	})
 	if err != nil {
 		t.Error(err)
