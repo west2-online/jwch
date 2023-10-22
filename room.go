@@ -31,7 +31,7 @@ func (s *Student) GetEmptyRoom(req EmptyRoomReq) (error, []string) {
 			"ctl00$TB_rq":                         req.Time,
 			"ctl00$qsjdpl":                        req.Start,
 			"ctl00$zzjdpl":                        req.End,
-			"ctl00$jxldpl":                        buildingMap[req.Build],
+			"ctl00$jxldpl":                        buildingMap[req.Building],
 			"ctl00$xnxqdpl":                       "202301",
 			"ctl00$xqdpl":                         "旗山校区",
 			"ctl00$xz1":                           ">=",
