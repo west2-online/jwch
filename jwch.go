@@ -17,7 +17,8 @@ import (
 func NewStudent() *Student {
 	// Disable HTTP/2.0
 	// Disable Redirect
-	client := resty.New().SetTransport(&http.Transport{TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper)}).SetRedirectPolicy(resty.NoRedirectPolicy())
+	client := resty.New().SetTransport(&http.Transport{TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}).SetRedirectPolicy(resty.NoRedirectPolicy())
 
 	return &Student{
 		client: client,
