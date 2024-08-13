@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/errno"
 	"github.com/west2-online/jwch/utils"
 
@@ -12,7 +13,7 @@ import (
 
 // 获取成绩，由于教务处缺陷，这里会返回全部的成绩
 func (s *Student) GetMarks() (resp []*Mark, err error) {
-	res, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/student/xyzk/cjyl/score_sheet.aspx")
+	res, err := s.GetWithSession(constants.MarksQueryURL)
 
 	if err != nil {
 		return nil, err
@@ -61,7 +62,7 @@ func (s *Student) GetMarks() (resp []*Mark, err error) {
 
 // 获取CET成绩
 func (s *Student) GetCET() error {
-	resp, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/student/glbm/cet/cet_cszt.aspx")
+	resp, err := s.GetWithSession(constants.CETQueryURL)
 
 	if err != nil {
 		return err

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"regexp"
 
+	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/errno"
 	"github.com/west2-online/jwch/utils"
 
@@ -81,7 +82,7 @@ func (s *Student) Login() error {
 		"X-Requested-With": "XMLHttpRequest",
 	}).SetFormData(map[string]string{
 		"token": token[1],
-	}).Post("https://jwcjwxt2.fzu.edu.cn/Sfrz/SSOLogin")
+	}).Post(constants.SSOLoginURL)
 
 	if err != nil {
 		return errno.HTTPQueryError.WithErr(err)
@@ -135,7 +136,7 @@ func (s *Student) CheckSession() error {
 	// 旧版处理过程： 查询Body中是否含有[当前用户]这四个字
 
 	// 检查过期
-	resp, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/jcxx/xsxx/StudentInformation.aspx")
+	resp, err := s.GetWithSession(constants.UserInfoURL)
 	if err != nil {
 		return err
 	}
@@ -156,7 +157,7 @@ func (s *Student) CheckSession() error {
 
 // 获取学生个人信息
 func (s *Student) GetInfo() (resp *StudentDetail, err error) {
-	res, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/jcxx/xsxx/StudentInformation.aspx")
+	res, err := s.GetWithSession(constants.UserInfoURL)
 
 	if err != nil {
 		return nil, err

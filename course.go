@@ -3,6 +3,7 @@ package jwch
 import (
 	"strings"
 
+	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/errno"
 	"github.com/west2-online/jwch/utils"
 
@@ -11,7 +12,7 @@ import (
 
 // 获取我的学期
 func (s *Student) GetTerms() (*Term, error) {
-	resp, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/student/xkjg/wdxk/xkjg_list.aspx")
+	resp, err := s.GetWithSession(constants.CourseURL)
 
 	if err != nil {
 		return nil, err
@@ -40,7 +41,7 @@ func (s *Student) GetTerms() (*Term, error) {
 // 获取我的选课
 func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([]*Course, error) {
 
-	resp, err := s.PostWithSession("https://jwcjwxt2.fzu.edu.cn:81/student/xkjg/wdxk/xkjg_list.aspx", map[string]string{
+	resp, err := s.PostWithSession(constants.CourseURL, map[string]string{
 		"ctl00$ContentPlaceHolder1$DDL_xnxq":  term,
 		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
 		"__VIEWSTATE":                         viewState,
