@@ -29,7 +29,7 @@ func (s *Student) Login() error {
 
 	code := verifyCodeResponse{}
 	loginResp := ssoLoginResponse{}
-
+	passMD5 := utils.Md5Hash(s.Password, 16)
 	// 获取验证码图片
 	resp, err := s.NewRequest().Get("https://jwcjwxt1.fzu.edu.cn/plus/verifycode.asp")
 
@@ -41,7 +41,6 @@ func (s *Student) Login() error {
 	resp, err = s.NewRequest().SetFormData(map[string]string{
 		"validateCode": utils.Base64EncodeHTTPImage(resp.Body()),
 	}).Post("https://statistics.fzuhelper.w2fzu.com/api/login/validateCode?validateCode")
-
 	if err != nil {
 		return errno.HTTPQueryError.WithMessage("automatic code identification failed")
 	}
@@ -59,7 +58,7 @@ func (s *Student) Login() error {
 	}).SetFormData(map[string]string{
 		"Verifycode": code.Message,
 		"muser":      s.ID,
-		"passwd":     s.Password,
+		"passwd":     passMD5,
 	}).Post("https://jwcjwxt1.fzu.edu.cn/logincheck.asp")
 
 	// 由于禁用了302，这里正常情况下会返回一个错误，跳转链接中包含了我们要的全部信息

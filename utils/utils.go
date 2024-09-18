@@ -2,7 +2,9 @@ package utils
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -79,6 +81,18 @@ func RemoveDuplicate(data interface{}) interface{} {
 
 func Base64EncodeHTTPImage(data []byte) string {
 	return "data:" + http.DetectContentType(data) + "base64," + base64.StdEncoding.EncodeToString(data)
+}
+
+// Md5Hash generates MD5 hash and returns either 16 or 32 bit based on the bit parameter.
+func Md5Hash(text string, bit int) string {
+	hasher := md5.New()
+	hasher.Write([]byte(text))
+	fullHash := hex.EncodeToString(hasher.Sum(nil)) // 32-bit (full) hash
+
+	if bit == 16 {
+		return fullHash[8:24] // return 16-bit hash (substring from index 8 to 24)
+	}
+	return fullHash // return full 32-bit hash
 }
 
 func StructJSONEncodeBase64(data interface{}) string {

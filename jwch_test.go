@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	username  = "username" // 学号
-	password  = "password" // 密码
+	username  = "" // 学号
+	password  = "" // 密码
 	localfile = "logindata.txt"
 )
 
