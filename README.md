@@ -31,6 +31,8 @@ For more detail, plz visit API docs.
 - [X] Session check
 - [X] Automatic code identification
 - [X] Set any apis but not implement
+- [X] Empty Rooms
+- [ ] Using Courrency
 - [ ] Complete all apis
 - [ ] Benchmark test
 - [ ] Bug check & fix

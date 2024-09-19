@@ -2,74 +2,159 @@ package jwch
 
 import (
 	"github.com/antchfx/htmlquery"
+	"github.com/west2-online/jwch/constants"
 	"golang.org/x/net/html"
 )
 
-var (
-	buildingMap = map[string]string{
-		"x3":  "公共教学楼西3",
-		"x2":  "公共教学楼西2",
-		"x1":  "公共教学楼西1",
-		"zl":  "公共教学楼中楼",
-		"d1":  "公共教学楼东1",
-		"d2":  "公共教学楼东2",
-		"d3":  "公共教学楼东3",
-		"wkl": "公共教学楼文科楼",
-		"wk":  "公共教学楼文科楼",
-	}
-)
-
-func (s *Student) GetEmptyRoom(req EmptyRoomReq) (error, []string) {
-	err, viewStateMap := s.getEmptyRoomState()
+func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
+	viewStateMap, err := s.getEmptyRoomState()
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
-	res, err := s.PostWithSession("https://jwcjwxt2.fzu.edu.cn:81/kkgl/kbcx/kbcx_kjs.aspx",
-		map[string]string{
+	var result []string
+	roomTypes, emptyRoomState, err := s.getEmptyRoomTypes(viewStateMap, "", req)
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range roomTypes {
+		res, err := s.PostWithSession(constants.ClassroomQueryURL,
+			map[string]string{
+				"__VIEWSTATE":                         emptyRoomState["VIEWSTATE"],
+				"__EVENTVALIDATION":                   emptyRoomState["EVENTVALIDATION"],
+				"ctl00$TB_rq":                         req.Time,
+				"ctl00$qsjdpl":                        req.Start,
+				"ctl00$zzjdpl":                        req.End,
+				"ctl00$jslxdpl":                       t,
+				"ctl00$xqdpl":                         req.Campus,
+				"ctl00$xz1":                           ">=",
+				"ctl00$jsrldpl":                       "0",
+				"ctl00$xz2":                           ">=",
+				"ctl00$ksrldpl":                       "0",
+				"ctl00$ContentPlaceHolder1$BT_search": "查询",
+			})
+		if err != nil {
+			return nil, err
+		}
+		rooms, err := parseEmptyRoom(res)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, rooms...)
+	}
+
+	return result, err
+}
+
+func (s *Student) GetQiShanEmptyRoom(req EmptyRoomReq) ([]string, error) {
+	viewStateMap, err := s.getEmptyRoomState()
+	if err != nil {
+		return nil, err
+	}
+	var result []string
+	//旗山固定爬取几栋教学楼
+	for _, building := range constants.BuildingArray {
+		roomTypes, emptyRoomState, err := s.getEmptyRoomTypes(viewStateMap, building, req)
+		if err != nil {
+			return nil, err
+		}
+		for _, t := range roomTypes {
+			res, err := s.PostWithSession(constants.ClassroomQueryURL,
+				map[string]string{
+					"__VIEWSTATE":                         emptyRoomState["VIEWSTATE"],
+					"__EVENTVALIDATION":                   emptyRoomState["EVENTVALIDATION"],
+					"ctl00$TB_rq":                         req.Time,
+					"ctl00$qsjdpl":                        req.Start,
+					"ctl00$zzjdpl":                        req.End,
+					"ctl00$jxldpl":                        building,
+					"ctl00$jslxdpl":                       t,
+					"ctl00$xqdpl":                         req.Campus,
+					"ctl00$xz1":                           ">=",
+					"ctl00$jsrldpl":                       "0",
+					"ctl00$xz2":                           ">=",
+					"ctl00$ksrldpl":                       "0",
+					"ctl00$ContentPlaceHolder1$BT_search": "查询",
+				})
+			if err != nil {
+				return nil, err
+			}
+			rooms, err := parseEmptyRoom(res)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, rooms...)
+		}
+	}
+	return result, err
+}
+
+// 获取VIEWSTATE和EVENTVALIDATION
+func (s *Student) getEmptyRoomState() (map[string]string, error) {
+	resp, err := s.GetWithSession(constants.ClassroomQueryURL)
+	if err != nil {
+		return nil, err
+	}
+	viewState := htmlquery.SelectAttr(htmlquery.FindOne(resp, `//*[@id="__VIEWSTATE"]`), "value")
+	eventValidation := htmlquery.SelectAttr(htmlquery.FindOne(resp, `//*[@id="__EVENTVALIDATION"]`), "value")
+	return map[string]string{
+		"VIEWSTATE":       viewState,
+		"EVENTVALIDATION": eventValidation,
+	}, nil
+
+}
+
+// 获取教室类型
+func (s *Student) getEmptyRoomTypes(viewStateMap map[string]string, building string, req EmptyRoomReq) ([]string, map[string]string, error) {
+	var res *html.Node
+	if building != "" {
+		res, _ = s.PostWithSession(constants.ClassroomQueryURL, map[string]string{
 			"__VIEWSTATE":                         viewStateMap["VIEWSTATE"],
 			"__EVENTVALIDATION":                   viewStateMap["EVENTVALIDATION"],
 			"ctl00$TB_rq":                         req.Time,
 			"ctl00$qsjdpl":                        req.Start,
 			"ctl00$zzjdpl":                        req.End,
-			"ctl00$jxldpl":                        buildingMap[req.Building],
-			"ctl00$xnxqdpl":                       "202301",
-			"ctl00$xqdpl":                         "旗山校区",
+			"ctl00$jxldpl":                        building,
+			"ctl00$xqdpl":                         req.Campus,
 			"ctl00$xz1":                           ">=",
 			"ctl00$jsrldpl":                       "0",
 			"ctl00$xz2":                           ">=",
 			"ctl00$ksrldpl":                       "0",
 			"ctl00$ContentPlaceHolder1$BT_search": "查询",
 		})
-	if err != nil {
-		return err, nil
+	} else {
+		res, _ = s.PostWithSession(constants.ClassroomQueryURL, map[string]string{
+			"__VIEWSTATE":                         viewStateMap["VIEWSTATE"],
+			"__EVENTVALIDATION":                   viewStateMap["EVENTVALIDATION"],
+			"ctl00$TB_rq":                         req.Time,
+			"ctl00$qsjdpl":                        req.Start,
+			"ctl00$zzjdpl":                        req.End,
+			"ctl00$xqdpl":                         req.Campus,
+			"ctl00$xz1":                           ">=",
+			"ctl00$jsrldpl":                       "0",
+			"ctl00$xz2":                           ">=",
+			"ctl00$ksrldpl":                       "0",
+			"ctl00$ContentPlaceHolder1$BT_search": "查询",
+		})
 	}
-	err, rooms := parseEmptyRoom(res)
-	if err != nil {
-		return err, nil
+	sel := htmlquery.Find(res, "//*[@id='jslxdpl']//option")
+	var types []string
+	for _, opt := range sel {
+		types = append(types, htmlquery.InnerText(opt))
 	}
-	return nil, rooms
-}
 
-// 获取VIEWSTATE和EVENTVALIDATION
-func (s *Student) getEmptyRoomState() (error, map[string]string) {
-	resp, err := s.GetWithSession("https://jwcjwxt2.fzu.edu.cn:81/kkgl/kbcx/kbcx_kjs.aspx")
-	if err != nil {
-		return err, nil
-	}
-	viewState := htmlquery.SelectAttr(htmlquery.FindOne(resp, `//*[@id="__VIEWSTATE"]`), "value")
-	eventValidation := htmlquery.SelectAttr(htmlquery.FindOne(resp, `//*[@id="__EVENTVALIDATION"]`), "value")
-	return nil, map[string]string{
+	viewState := htmlquery.SelectAttr(htmlquery.FindOne(res, `//*[@id="__VIEWSTATE"]`), "value")
+	eventValidation := htmlquery.SelectAttr(htmlquery.FindOne(res, `//*[@id="__EVENTVALIDATION"]`), "value")
+
+	return types, map[string]string{
 		"VIEWSTATE":       viewState,
 		"EVENTVALIDATION": eventValidation,
-	}
-
+	}, nil
 }
 
-func parseEmptyRoom(doc *html.Node) (error, []string) {
+func parseEmptyRoom(doc *html.Node) ([]string, error) {
 	sel := htmlquery.Find(doc, "//*[@id='jsdpl']//option")
 	var res []string
 	for _, opt := range sel {
 		res = append(res, htmlquery.InnerText(opt))
 	}
-	return nil, res
+	return res, nil
 }

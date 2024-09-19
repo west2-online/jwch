@@ -133,7 +133,7 @@ func Test_GetMarks(t *testing.T) {
 	fmt.Println(utils.PrintStruct(marks))
 }
 
-func Test_GetEmptyRoom(t *testing.T) {
+func Test_GetQiShanEmptyRoom(t *testing.T) {
 	if !islogin {
 		err := login()
 		if err != nil {
@@ -141,11 +141,116 @@ func Test_GetEmptyRoom(t *testing.T) {
 		}
 	}
 
-	err, rooms := stu.GetEmptyRoom(EmptyRoomReq{
-		Time:     "2023-09-22",
-		Start:    "1",
-		End:      "2",
-		Building: "x3",
+	rooms, err := stu.GetQiShanEmptyRoom(EmptyRoomReq{
+		Campus: "旗山校区",
+		Time:   "2024-09-18",
+		Start:  "1",
+		End:    "2",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(rooms))
+}
+
+func Test_GetJinJiangEmptyRoom(t *testing.T) {
+	if !islogin {
+		err := login()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	rooms, err := stu.GetEmptyRoom(EmptyRoomReq{
+		Campus: "晋江校区",
+		Time:   "2024-09-19",
+		Start:  "1",
+		End:    "2",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(rooms))
+}
+
+func Test_GetTongPanEmptyRoom(t *testing.T) {
+	if !islogin {
+		err := login()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	rooms, err := stu.GetEmptyRoom(EmptyRoomReq{
+		Campus: "铜盘校区",
+		Time:   "2024-09-19",
+		Start:  "1",
+		End:    "2",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(rooms))
+}
+
+func Test_GetQuanGangEmptyRoom(t *testing.T) {
+	if !islogin {
+		err := login()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	rooms, err := stu.GetEmptyRoom(EmptyRoomReq{
+		Campus: "泉港校区",
+		Time:   "2024-09-19",
+		Start:  "1",
+		End:    "2",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(rooms))
+}
+
+func Test_GetYiShanEmptyRoom(t *testing.T) {
+	if !islogin {
+		err := login()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	rooms, err := stu.GetEmptyRoom(EmptyRoomReq{
+		Campus: "怡山校区",
+		Time:   "2024-09-19",
+		Start:  "1",
+		End:    "2",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(rooms))
+}
+
+func Test_GetXiaMenEmptyRoom(t *testing.T) {
+	if !islogin {
+		err := login()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	rooms, err := stu.GetEmptyRoom(EmptyRoomReq{
+		Campus: "厦门工艺美院",
+		Time:   "2024-09-19",
+		Start:  "1",
+		End:    "2",
 	})
 	if err != nil {
 		t.Error(err)
