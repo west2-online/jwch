@@ -47,19 +47,31 @@ type Term struct {
 
 // 课程信息
 type Course struct {
-	Type          string `json:"type"`          // 修读类别
-	Name          string `json:"name"`          // 课程名称
-	PaymentStatus string `json:"paymentstatus"` // 缴费状态
-	Syllabus      string `json:"syllabus"`      // 课程大纲
-	LessonPlan    string `json:"lessonplan"`    // 课程计划
-	Credits       string `json:"credit"`        // 学分
-	ElectiveType  string `json:"electivetype"`  // 选课类型
-	ExamType      string `json:"examtype"`      // 考试类别
-	Teacher       string `json:"teacher"`       // 任课教师
-	Classroom     string `json:"classroom"`     // 上课时间地点
-	ExamTime      string `json:"examtime"`      // 考试时间地点
-	Remark        string `json:"remark"`        // 备注
-	Adjust        string `json:"adjust"`        // 调课信息
+	Type             string               `json:"type"`             // 修读类别
+	Name             string               `json:"name"`             // 课程名称
+	PaymentStatus    string               `json:"paymentstatus"`    // 缴费状态
+	Syllabus         string               `json:"syllabus"`         // 课程大纲
+	LessonPlan       string               `json:"lessonplan"`       // 课程计划
+	Credits          string               `json:"credit"`           // 学分
+	ElectiveType     string               `json:"electivetype"`     // 选课类型
+	ExamType         string               `json:"examtype"`         // 考试类别
+	Teacher          string               `json:"teacher"`          // 任课教师
+	ScheduleRules    []CourseScheduleRule `json:"scheduleRules"`    // 上课时间地点规则
+	RawScheduleRules string               `json:"rawScheduleRules"` // 上课时间地点（原始文本）
+	ExamTime         string               `json:"examtime"`         // 考试时间地点
+	Remark           string               `json:"remark"`           // 备注
+	Adjust           string               `json:"adjust"`           // 调课信息
+}
+
+type CourseScheduleRule struct {
+	Location   string `json:"location"`   // 上课地点
+	StartClass int    `json:"startClass"` // 开始节数
+	EndClass   int    `json:"endClass"`   // 结束节数
+	StartWeek  int    `json:"startWeek"`  // 开始周
+	EndWeek    int    `json:"endWeek"`    // 结束周
+	Weekday    int    `json:"weekday"`    // 星期几
+	Single     bool   `json:"single"`     // 单周 (PS: 为啥不用 odd)
+	Double     bool   `json:"double"`     // 双周 (PS: 为啥不用 even)
 }
 
 type Mark struct {
