@@ -110,20 +110,29 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 				startWeekday, _ := strconv.Atoi(strings.TrimPrefix(lineData[1], "星期"))
 				endWeekday, _ := strconv.Atoi(strings.TrimPrefix(lineData[4], "星期"))
 
-				/*
-					目前对于这种课程的解析有两种猜测:
-						1. 第3周的周一到第4周的周日
-						2. 第3周到第4周，每周的周一到周日
-					福uu客户端现在采用的是猜测2，所以现在先按照猜测2来解析
-				*/
-				for i := startWeekday; i <= endWeekday; i++ {
+				for weekday := 1; weekday <= 7; weekday++ {
+					curStartWeek := startWeek
+					curEndWeek := endWeek
+
+					if weekday < startWeekday {
+						curStartWeek++
+					}
+
+					if weekday > endWeekday {
+						curEndWeek--
+					}
+
+					if curStartWeek > curEndWeek {
+						continue
+					}
+
 					scheduleRules = append(scheduleRules, CourseScheduleRule{
 						Location:   "",
 						StartClass: 1,
 						EndClass:   8,
-						StartWeek:  startWeek,
-						EndWeek:    endWeek,
-						Weekday:    i,
+						StartWeek:  curStartWeek,
+						EndWeek:    curEndWeek,
+						Weekday:    weekday,
 						Single:     true,
 						Double:     true,
 					})
