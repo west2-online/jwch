@@ -53,8 +53,8 @@ type Course struct {
 	Teacher          string               `json:"teacher"`          // 任课教师
 	ScheduleRules    []CourseScheduleRule `json:"scheduleRules"`    // 上课时间地点规则
 	RawScheduleRules string               `json:"rawScheduleRules"` // 上课时间地点（原始文本）
+	RawAdjust        string               `json:"rawAdjust"`        // 调课信息（原始文本）
 	Remark           string               `json:"remark"`           // 备注
-	Adjust           string               `json:"adjust"`           // 调课信息
 }
 
 type CourseScheduleRule struct {
@@ -66,6 +66,20 @@ type CourseScheduleRule struct {
 	Weekday    int    `json:"weekday"`    // 星期几
 	Single     bool   `json:"single"`     // 单周 (PS: 为啥不用 odd)
 	Double     bool   `json:"double"`     // 双周 (PS: 为啥不用 even)
+	Adjust     bool   `json:"adjust"`     // 调课
+}
+
+type CourseAdjustRule struct {
+	OldWeek       int `json:"oldWeek"`       // 原-周次
+	OldWeekday    int `json:"oldWeekday"`    // 原-星期几
+	OldStartClass int `json:"oldStartClass"` // 原-开始节数
+	OldEndClass   int `json:"oldEndClass"`   // 原-结束节数
+
+	NewWeek       int    `json:"newWeek"`       // 新-周次
+	NewWeekday    int    `json:"newWeekday"`    // 新-星期几
+	NewStartClass int    `json:"newStartClass"` // 新-开始节数
+	NewEndClass   int    `json:"newEndClass"`   // 新-结束节数
+	NewLocation   string `json:"newLocation"`   // 新-上课地点
 }
 
 type Mark struct {
