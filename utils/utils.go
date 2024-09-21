@@ -7,9 +7,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/net/html"
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
 )
 
 func SaveData(filePath string, data []byte) error {
@@ -107,4 +109,32 @@ func JSONUnmarshalFromFile(filePath string, v any) error {
 	}
 
 	return json.Unmarshal(data, v)
+}
+
+func InnerTextWithBr(n *html.Node) string {
+	if n.Type == html.TextNode {
+		return n.Data
+	}
+
+	if n.Type == html.ElementNode && n.Data == "br" {
+		return "\n"
+	}
+
+	var buf bytes.Buffer
+
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		buf.WriteString(InnerTextWithBr(c))
+	}
+
+	return buf.String()
+}
+
+func SafeAtoi(s string) int {
+	n, err := strconv.Atoi(s)
+
+	if err != nil {
+		return 0
+	}
+
+	return n
 }
