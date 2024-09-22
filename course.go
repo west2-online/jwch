@@ -81,6 +81,7 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 			06周 星期3:5-6节  调至  09周 星期1:7-8节  旗山西1-206
 		*/
 		courseInfo11 := strings.Split(utils.InnerTextWithBr(info[11]), "\n")
+		// 注意：下面的正则里面有 NO-BREAK SPACE (U+00A0 %C2%A0)
 		adjustRegex := regexp.MustCompile(`(\d{2})周 星期(\d):(\d{1,2})-(\d{1,2})节[\s ]*调至[\s ]*(\d{2})周 星期(\d):(\d{1,2})-(\d{1,2})节[\s ]*(\S*)`)
 		adjustRules := []CourseAdjustRule{}
 
