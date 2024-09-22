@@ -258,3 +258,12 @@ func Test_GetXiaMenEmptyRoom(t *testing.T) {
 
 	fmt.Println(utils.PrintStruct(rooms))
 }
+
+func Test_GetSchoolCalendar(t *testing.T) {
+	calendar, err := stu.GetSchoolCalendar()
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(calendar))
+}
