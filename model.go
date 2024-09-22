@@ -113,8 +113,22 @@ type SchoolCalendar struct {
 }
 
 type CalTerm struct {
+	TermId     string `json:"termId"`     // 学期ID
 	SchoolYear string `json:"schoolYear"` // 学年
 	Term       string `json:"term"`       // 学期
 	StartDate  string `json:"startDate"`  // 开始日期 格式:2024-08-26
 	EndDate    string `json:"endDate"`    // 结束日期 格式:2025-01-17
+}
+
+type CalTermEvents struct {
+	TermId     string         `json:"termId"`     // 学期ID
+	Term       string         `json:"term"`       // 学期
+	SchoolYear string         `json:"schoolYear"` // 学年
+	Events     []CalTermEvent `json:"events"`     // 事件
+}
+
+type CalTermEvent struct {
+	Name      string `json:"name"`      // 事件名称
+	StartDate string `json:"startDate"` // 开始日期 格式:2024-08-26
+	EndDate   string `json:"endDate"`   // 结束日期 格式:2025-01-17
 }

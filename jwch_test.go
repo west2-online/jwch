@@ -267,3 +267,17 @@ func Test_GetSchoolCalendar(t *testing.T) {
 
 	fmt.Println(utils.PrintStruct(calendar))
 }
+
+func Test_GetTermEvents(t *testing.T) {
+	calendar, err := stu.GetSchoolCalendar()
+	if err != nil {
+		t.Error(err)
+	}
+
+	events, err := stu.GetTermEvents(calendar.Terms[0].TermId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(events))
+}

@@ -2,6 +2,7 @@ package jwch
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/antchfx/htmlquery"
 	iconv "github.com/djimenez/iconv-go"
@@ -44,6 +45,7 @@ func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
 		endDate = endDate[0:4] + "-" + endDate[4:6] + "-" + endDate[6:8]
 
 		res.Terms = append(res.Terms, CalTerm{
+			TermId:     rawTerm,
 			SchoolYear: schoolYear,
 			Term:       term,
 			StartDate:  startDate,
@@ -54,4 +56,48 @@ func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
 	return res, nil
 }
 
-// TODO: 获取校历学期详细内容
+func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
+	resp, err := s.PostWithSession(constants.SchoolCalendarURL, map[string]string{
+		"xq":     termId,
+		"submit": "提交",
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	rawTermDetail := htmlquery.InnerText(htmlquery.FindOne(resp, `/html/body/table[2]/tbody/tr`))
+	rawTermDetail = strings.ReplaceAll(rawTermDetail, " ", " ")
+	rawTermDetail, _ = iconv.ConvertString(rawTermDetail, "gb2312", "utf-8")
+
+	res := &CalTermEvents{
+		TermId:     termId,
+		Term:       termId[0:6],
+		SchoolYear: termId[0:4],
+	}
+
+	termDetail := strings.Split(rawTermDetail, "；")
+
+	for _, event := range termDetail {
+		event = strings.TrimSpace(event)
+
+		if event == "" {
+			continue
+		}
+
+		rawData := strings.Split(event, "为")
+		rawDate := strings.Split(rawData[0], "至")
+
+		name := strings.TrimSpace(rawData[1])
+		startDate := strings.TrimSpace(rawDate[0])
+		endDate := strings.TrimSpace(rawDate[1])
+
+		res.Events = append(res.Events, CalTermEvent{
+			Name:      name,
+			StartDate: startDate,
+			EndDate:   endDate,
+		})
+	}
+
+	return res, nil
+}
