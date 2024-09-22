@@ -58,15 +58,16 @@ type Course struct {
 }
 
 type CourseScheduleRule struct {
-	Location   string `json:"location"`   // 上课地点
-	StartClass int    `json:"startClass"` // 开始节数
-	EndClass   int    `json:"endClass"`   // 结束节数
-	StartWeek  int    `json:"startWeek"`  // 开始周
-	EndWeek    int    `json:"endWeek"`    // 结束周
-	Weekday    int    `json:"weekday"`    // 星期几
-	Single     bool   `json:"single"`     // 单周 (PS: 为啥不用 odd)
-	Double     bool   `json:"double"`     // 双周 (PS: 为啥不用 even)
-	Adjust     bool   `json:"adjust"`     // 调课
+	Location     string `json:"location"`     // 上课地点
+	StartClass   int    `json:"startClass"`   // 开始节数
+	EndClass     int    `json:"endClass"`     // 结束节数
+	StartWeek    int    `json:"startWeek"`    // 开始周
+	EndWeek      int    `json:"endWeek"`      // 结束周
+	Weekday      int    `json:"weekday"`      // 星期几
+	Single       bool   `json:"single"`       // 单周 (PS: 为啥不用 odd)
+	Double       bool   `json:"double"`       // 双周 (PS: 为啥不用 even)
+	Adjust       bool   `json:"adjust"`       // 调课
+	FromFullWeek bool   `json:"fromFullWeek"` // 是否来自整周课程
 }
 
 type CourseAdjustRule struct {

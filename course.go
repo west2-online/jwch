@@ -165,15 +165,16 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 					}
 
 					scheduleRules = append(scheduleRules, CourseScheduleRule{
-						Location:   "",
-						StartClass: 1,
-						EndClass:   8,
-						StartWeek:  curStartWeek,
-						EndWeek:    curEndWeek,
-						Weekday:    weekday,
-						Single:     true,
-						Double:     true,
-						Adjust:     false,
+						Location:     "",
+						StartClass:   1,
+						EndClass:     8,
+						StartWeek:    curStartWeek,
+						EndWeek:      curEndWeek,
+						Weekday:      weekday,
+						Single:       true,
+						Double:       true,
+						Adjust:       false,
+						FromFullWeek: true,
 					})
 				}
 
@@ -215,14 +216,16 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 
 			if len(adjustRules) == 0 {
 				scheduleRules = append(scheduleRules, CourseScheduleRule{
-					Location:   location,
-					StartClass: startClass,
-					EndClass:   endClass,
-					StartWeek:  startWeek,
-					EndWeek:    endWeek,
-					Weekday:    weekDay,
-					Single:     single,
-					Double:     double,
+					Location:     location,
+					StartClass:   startClass,
+					EndClass:     endClass,
+					StartWeek:    startWeek,
+					EndWeek:      endWeek,
+					Weekday:      weekDay,
+					Single:       single,
+					Double:       double,
+					Adjust:       false,
+					FromFullWeek: false,
 				})
 			} else {
 				startWeek := utils.SafeAtoi(weekInfo[0])
@@ -246,15 +249,16 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 
 					// 添加新的课程信息
 					scheduleRules = append(scheduleRules, CourseScheduleRule{
-						Location:   adjustRule.NewLocation,
-						StartClass: adjustRule.NewStartClass,
-						EndClass:   adjustRule.NewEndClass,
-						StartWeek:  adjustRule.NewWeek,
-						EndWeek:    adjustRule.NewWeek,
-						Weekday:    adjustRule.NewWeekday,
-						Single:     true,
-						Double:     true,
-						Adjust:     true, // 调课
+						Location:     adjustRule.NewLocation,
+						StartClass:   adjustRule.NewStartClass,
+						EndClass:     adjustRule.NewEndClass,
+						StartWeek:    adjustRule.NewWeek,
+						EndWeek:      adjustRule.NewWeek,
+						Weekday:      adjustRule.NewWeekday,
+						Single:       true,
+						Double:       true,
+						Adjust:       true, // 调课
+						FromFullWeek: false,
 					})
 				}
 
@@ -270,15 +274,16 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 					}
 
 					scheduleRules = append(scheduleRules, CourseScheduleRule{
-						Location:   location,
-						StartClass: startClass,
-						EndClass:   endClass,
-						StartWeek:  curStartWeek,
-						EndWeek:    removedWeek - 1,
-						Weekday:    weekDay,
-						Single:     single,
-						Double:     double,
-						Adjust:     false,
+						Location:     location,
+						StartClass:   startClass,
+						EndClass:     endClass,
+						StartWeek:    curStartWeek,
+						EndWeek:      removedWeek - 1,
+						Weekday:      weekDay,
+						Single:       single,
+						Double:       double,
+						Adjust:       false,
+						FromFullWeek: false,
 					})
 
 					curStartWeek = removedWeek + 1
@@ -286,15 +291,16 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 
 				if curStartWeek <= endWeek {
 					scheduleRules = append(scheduleRules, CourseScheduleRule{
-						Location:   location,
-						StartClass: startClass,
-						EndClass:   endClass,
-						StartWeek:  curStartWeek,
-						EndWeek:    endWeek,
-						Weekday:    weekDay,
-						Single:     single,
-						Double:     double,
-						Adjust:     false,
+						Location:     location,
+						StartClass:   startClass,
+						EndClass:     endClass,
+						StartWeek:    curStartWeek,
+						EndWeek:      endWeek,
+						Weekday:      weekDay,
+						Single:       single,
+						Double:       double,
+						Adjust:       false,
+						FromFullWeek: false,
 					})
 				}
 			}
