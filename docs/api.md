@@ -31,6 +31,9 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 // Mark
 func (s *Student) GetMarks() (resp []*Mark, err error) {}
 func (s *Student) GetCET() error {}
+
+// School Calendar
+func (s *Student) GetSchoolCalendar() (resp []*SchoolCalendar, err error) {}
 ```
 
 # Usage example
