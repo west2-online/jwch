@@ -15,7 +15,7 @@ import (
 
 // 获取我的学期
 func (s *Student) GetTerms() (*Term, error) {
-	resp, err := s.GetWithSession(constants.CourseURL)
+	resp, err := s.GetWithIdentifier(constants.CourseURL)
 
 	if err != nil {
 		return nil, err

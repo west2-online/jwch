@@ -72,7 +72,6 @@ func (s *Student) Login() error {
 		return errno.LoginCheckFailedError
 	}
 
-	// 获取session的id和num
 	id := regexp.MustCompile(`id=(.*?)&`).FindStringSubmatch(err.Error())[1]
 	num := regexp.MustCompile(`num=(.*?)&`).FindStringSubmatch(err.Error())[1]
 
@@ -98,7 +97,7 @@ func (s *Student) Login() error {
 		return errno.SSOLoginFailedError
 	}
 
-	// 获取session
+	// 获取cookies
 	resp, err = s.NewRequest().SetHeaders(map[string]string{
 		"Referer": "https://jwcjwxt1.fzu.edu.cn/",
 		"Origin":  "https://jwcjwxt2.fzu.edu.cn/",
@@ -111,20 +110,20 @@ func (s *Student) Login() error {
 	}).Get("https://jwcjwxt2.fzu.edu.cn:81/loginchk_xs.aspx")
 
 	// 保存这部分Cookie，这部分Cookie是用来后续鉴权的[ASP.NET_SessionId]
-	s.AppendCookies(resp.RawResponse.Cookies())
+	s.SetCookies(resp.RawResponse.Cookies())
 
 	// 这里是err == nil 因为禁止了重定向，正常登录是会出现异常的
 	if err == nil {
 		return errno.GetSessionFailedError
 	}
 
-	session := regexp.MustCompile(`id=(.*?)&`).FindStringSubmatch(err.Error())
+	data := regexp.MustCompile(`id=(.*?)&`).FindStringSubmatch(err.Error())
 
-	if len(session) < 1 {
+	if len(data) < 1 {
 		return errno.GetSessionFailedError
 	}
 
-	s.WithSession(session[1])
+	s.SetIdentifier(data[1])
 
 	return nil
 }
@@ -135,7 +134,7 @@ func (s *Student) CheckSession() error {
 	// 旧版处理过程： 查询Body中是否含有[当前用户]这四个字
 
 	// 检查过期
-	resp, err := s.GetWithSession(constants.UserInfoURL)
+	resp, err := s.GetWithIdentifier(constants.UserInfoURL)
 	if err != nil {
 		return err
 	}
@@ -156,7 +155,7 @@ func (s *Student) CheckSession() error {
 
 // 获取学生个人信息
 func (s *Student) GetInfo() (resp *StudentDetail, err error) {
-	res, err := s.GetWithSession(constants.UserInfoURL)
+	res, err := s.GetWithIdentifier(constants.UserInfoURL)
 
 	if err != nil {
 		return nil, err

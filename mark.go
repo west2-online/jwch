@@ -13,7 +13,7 @@ import (
 
 // 获取成绩，由于教务处缺陷，这里会返回全部的成绩
 func (s *Student) GetMarks() (resp []*Mark, err error) {
-	res, err := s.GetWithSession(constants.MarksQueryURL)
+	res, err := s.GetWithIdentifier(constants.MarksQueryURL)
 
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (s *Student) GetMarks() (resp []*Mark, err error) {
 
 // 获取CET成绩
 func (s *Student) GetCET() error {
-	resp, err := s.GetWithSession(constants.CETQueryURL)
+	resp, err := s.GetWithIdentifier(constants.CETQueryURL)
 
 	if err != nil {
 		return err

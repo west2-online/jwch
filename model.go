@@ -1,23 +1,19 @@
 package jwch
 
 import (
-	"net/http"
-
 	"github.com/go-resty/resty/v2"
+	"net/http"
 )
-
-// 本地数据
-type LoginData struct {
-	Cookies []*http.Cookie `json:"cookies"`
-	Session string         `json:"session"`
-}
 
 // 学生对象
 type Student struct {
-	ID        string        `json:"id"`         // 学号
-	Password  string        `json:"password"`   // 密码
-	LoginData LoginData     `json:"login_data"` // 登录凭证
-	client    *resty.Client // Request对象
+	ID       string         `json:"id"`       // 学号
+	Password string         `json:"password"` // 密码
+	cookies  []*http.Cookie //cookies中将包含session_id和其他数据
+	//如果我们使用client进行登陆的话，此时该字段失效，因为client会在登录时自动保存登陆凭证（session）
+	//所以该字段用于其他服务调用时传递登陆凭证
+	Identifier string        //位于url上id=....的一个标识符，主要用于组成url
+	client     *resty.Client // Request对象
 }
 
 // 学生信息详情

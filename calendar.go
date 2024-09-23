@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
-	resp, err := s.GetWithSession(constants.SchoolCalendarURL)
+	resp, err := s.GetWithIdentifier(constants.SchoolCalendarURL)
 
 	if err != nil {
 		return nil, err

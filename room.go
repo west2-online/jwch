@@ -89,7 +89,7 @@ func (s *Student) GetQiShanEmptyRoom(req EmptyRoomReq) ([]string, error) {
 
 // 获取VIEWSTATE和EVENTVALIDATION
 func (s *Student) getEmptyRoomState() (map[string]string, error) {
-	resp, err := s.GetWithSession(constants.ClassroomQueryURL)
+	resp, err := s.GetWithIdentifier(constants.ClassroomQueryURL)
 	if err != nil {
 		return nil, err
 	}

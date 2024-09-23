@@ -43,32 +43,6 @@ func Test_Login(t *testing.T) {
 	}
 }
 
-func Test_LoginFromLocal(t *testing.T) {
-	var res LoginData
-	err := utils.JSONUnmarshalFromFile(localfile, &res)
-	if err != nil {
-		t.Error(err)
-	}
-	stu.SetLoginData(res)
-
-	err = stu.CheckSession()
-
-	if err != nil {
-		t.Log("session expire, relogin")
-		err = stu.Login()
-		if err != nil {
-			t.Error(err)
-		}
-		err = stu.CheckSession()
-
-		if err != nil {
-			t.Error(err)
-		}
-
-		stu.SaveLoginData(localfile)
-	}
-}
-
 func Test_GetCourse(t *testing.T) {
 	if !islogin {
 		err := login()
