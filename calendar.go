@@ -57,7 +57,7 @@ func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
 }
 
 func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
-	resp, err := s.PostWithSession(constants.SchoolCalendarURL, map[string]string{
+	resp, err := s.PostWithIdentifier(constants.SchoolCalendarURL, map[string]string{
 		"xq":     termId,
 		"submit": "提交",
 	})

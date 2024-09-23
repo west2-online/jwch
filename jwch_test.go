@@ -107,6 +107,7 @@ func Test_GetMarks(t *testing.T) {
 	fmt.Println(utils.PrintStruct(marks))
 }
 
+// 使用并发后似乎快了1s(
 func Test_GetQiShanEmptyRoom(t *testing.T) {
 	if !islogin {
 		err := login()
@@ -117,7 +118,7 @@ func Test_GetQiShanEmptyRoom(t *testing.T) {
 
 	rooms, err := stu.GetQiShanEmptyRoom(EmptyRoomReq{
 		Campus: "旗山校区",
-		Time:   "2024-09-18",
+		Time:   "2024-09-19",
 		Start:  "1",
 		End:    "2",
 	})

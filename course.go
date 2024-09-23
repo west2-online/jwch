@@ -44,7 +44,7 @@ func (s *Student) GetTerms() (*Term, error) {
 // 获取我的选课
 func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([]*Course, error) {
 
-	resp, err := s.PostWithSession(constants.CourseURL, map[string]string{
+	resp, err := s.PostWithIdentifier(constants.CourseURL, map[string]string{
 		"ctl00$ContentPlaceHolder1$DDL_xnxq":  term,
 		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
 		"__VIEWSTATE":                         viewState,

@@ -11,61 +11,32 @@ func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	var result []string
 	roomTypes, emptyRoomState, err := s.getEmptyRoomTypes(viewStateMap, "", req)
 	if err != nil {
 		return nil, err
 	}
-	for _, t := range roomTypes {
-		res, err := s.PostWithSession(constants.ClassroomQueryURL,
-			map[string]string{
-				"__VIEWSTATE":                         emptyRoomState["VIEWSTATE"],
-				"__EVENTVALIDATION":                   emptyRoomState["EVENTVALIDATION"],
-				"ctl00$TB_rq":                         req.Time,
-				"ctl00$qsjdpl":                        req.Start,
-				"ctl00$zzjdpl":                        req.End,
-				"ctl00$jslxdpl":                       t,
-				"ctl00$xqdpl":                         req.Campus,
-				"ctl00$xz1":                           ">=",
-				"ctl00$jsrldpl":                       "0",
-				"ctl00$xz2":                           ">=",
-				"ctl00$ksrldpl":                       "0",
-				"ctl00$ContentPlaceHolder1$BT_search": "查询",
-			})
-		if err != nil {
-			return nil, err
-		}
-		rooms, err := parseEmptyRoom(res)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, rooms...)
-	}
-
-	return result, err
-}
-
-func (s *Student) GetQiShanEmptyRoom(req EmptyRoomReq) ([]string, error) {
-	viewStateMap, err := s.getEmptyRoomState()
-	if err != nil {
-		return nil, err
-	}
-	var result []string
-	//旗山固定爬取几栋教学楼
-	for _, building := range constants.BuildingArray {
-		roomTypes, emptyRoomState, err := s.getEmptyRoomTypes(viewStateMap, building, req)
-		if err != nil {
-			return nil, err
-		}
-		for _, t := range roomTypes {
-			res, err := s.PostWithSession(constants.ClassroomQueryURL,
+	//按照教室类型进行并发访问
+	channels := make([]chan struct {
+		res []string
+		err error
+	}, len(roomTypes))
+	var rooms []string
+	for i, t := range roomTypes {
+		channels[i] = make(chan struct {
+			res []string
+			err error
+		})
+		go func(t string, ch chan struct {
+			res []string
+			err error
+		}) {
+			res, err := s.PostWithIdentifier(constants.ClassroomQueryURL,
 				map[string]string{
 					"__VIEWSTATE":                         emptyRoomState["VIEWSTATE"],
 					"__EVENTVALIDATION":                   emptyRoomState["EVENTVALIDATION"],
 					"ctl00$TB_rq":                         req.Time,
 					"ctl00$qsjdpl":                        req.Start,
 					"ctl00$zzjdpl":                        req.End,
-					"ctl00$jxldpl":                        building,
 					"ctl00$jslxdpl":                       t,
 					"ctl00$xqdpl":                         req.Campus,
 					"ctl00$xz1":                           ">=",
@@ -75,16 +46,121 @@ func (s *Student) GetQiShanEmptyRoom(req EmptyRoomReq) ([]string, error) {
 					"ctl00$ContentPlaceHolder1$BT_search": "查询",
 				})
 			if err != nil {
-				return nil, err
+				ch <- struct {
+					res []string
+					err error
+				}{res: nil, err: err}
+				return
 			}
 			rooms, err := parseEmptyRoom(res)
 			if err != nil {
-				return nil, err
+				ch <- struct {
+					res []string
+					err error
+				}{res: nil, err: err}
+				return
 			}
-			result = append(result, rooms...)
-		}
+			ch <- struct {
+				res []string
+				err error
+			}{res: rooms, err: nil}
+		}(t, channels[i])
+
 	}
-	return result, err
+	for _, ch := range channels {
+		temp := <-ch
+		if temp.err != nil {
+			return nil, temp.err
+		}
+		rooms = append(rooms, temp.res...)
+	}
+	return rooms, err
+}
+
+func (s *Student) GetQiShanEmptyRoom(req EmptyRoomReq) ([]string, error) {
+	viewStateMap, err := s.getEmptyRoomState()
+	if err != nil {
+		return nil, err
+	}
+	var rooms []string
+	//这里按照building的顺序进行并发爬取
+	//创建channel数组
+	channels := make([]chan struct {
+		res []string
+		err error
+	}, len(constants.BuildingArray))
+
+	for i, building := range constants.BuildingArray {
+		channels[i] = make(chan struct {
+			res []string
+			err error
+		})
+		go func(index int, building string, ch chan struct {
+			res []string
+			err error
+		}) {
+			roomTypes, emptyRoomState, err := s.getEmptyRoomTypes(viewStateMap, building, req)
+			if err != nil {
+				ans := struct {
+					res []string
+					err error
+				}{res: nil, err: err}
+				ch <- ans
+			}
+			var rooms []string
+			for _, t := range roomTypes {
+				res, err := s.PostWithIdentifier(constants.ClassroomQueryURL,
+					map[string]string{
+						"__VIEWSTATE":                         emptyRoomState["VIEWSTATE"],
+						"__EVENTVALIDATION":                   emptyRoomState["EVENTVALIDATION"],
+						"ctl00$TB_rq":                         req.Time,
+						"ctl00$qsjdpl":                        req.Start,
+						"ctl00$zzjdpl":                        req.End,
+						"ctl00$jxldpl":                        building,
+						"ctl00$jslxdpl":                       t,
+						"ctl00$xqdpl":                         req.Campus,
+						"ctl00$xz1":                           ">=",
+						"ctl00$jsrldpl":                       "0",
+						"ctl00$xz2":                           ">=",
+						"ctl00$ksrldpl":                       "0",
+						"ctl00$ContentPlaceHolder1$BT_search": "查询",
+					})
+				if err != nil {
+					ch <- struct {
+						res []string
+						err error
+					}{res: nil, err: err}
+					return
+				}
+
+				roomList, err := parseEmptyRoom(res)
+				if err != nil {
+					ch <- struct {
+						res []string
+						err error
+					}{res: roomList, err: err}
+					return
+				}
+
+				rooms = append(rooms, roomList...)
+			}
+			ch <- struct {
+				res []string
+				err error
+			}{res: rooms, err: nil}
+		}(i, building, channels[i])
+	}
+
+	// 按顺序合并结果
+	for _, ch := range channels {
+		temp := <-ch
+		if temp.err != nil {
+			return nil, temp.err
+		}
+		rooms = append(rooms, temp.res...)
+	}
+
+	return rooms, nil
 }
 
 // 获取VIEWSTATE和EVENTVALIDATION
@@ -106,7 +182,7 @@ func (s *Student) getEmptyRoomState() (map[string]string, error) {
 func (s *Student) getEmptyRoomTypes(viewStateMap map[string]string, building string, req EmptyRoomReq) ([]string, map[string]string, error) {
 	var res *html.Node
 	if building != "" {
-		res, _ = s.PostWithSession(constants.ClassroomQueryURL, map[string]string{
+		res, _ = s.PostWithIdentifier(constants.ClassroomQueryURL, map[string]string{
 			"__VIEWSTATE":                         viewStateMap["VIEWSTATE"],
 			"__EVENTVALIDATION":                   viewStateMap["EVENTVALIDATION"],
 			"ctl00$TB_rq":                         req.Time,
@@ -121,7 +197,7 @@ func (s *Student) getEmptyRoomTypes(viewStateMap map[string]string, building str
 			"ctl00$ContentPlaceHolder1$BT_search": "查询",
 		})
 	} else {
-		res, _ = s.PostWithSession(constants.ClassroomQueryURL, map[string]string{
+		res, _ = s.PostWithIdentifier(constants.ClassroomQueryURL, map[string]string{
 			"__VIEWSTATE":                         viewStateMap["VIEWSTATE"],
 			"__EVENTVALIDATION":                   viewStateMap["EVENTVALIDATION"],
 			"ctl00$TB_rq":                         req.Time,

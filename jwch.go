@@ -24,6 +24,13 @@ func NewStudent() *Student {
 	}
 }
 
+func (s *Student) WithLoginData(identifier string, cookies []*http.Cookie) *Student {
+	s.Identifier = identifier
+	s.cookies = cookies
+	s.client.SetCookies(cookies)
+	return s
+}
+
 // 携带账号密码，这部分考虑整合到Login中，因为实际上我们不需要这个东西
 func (s *Student) WithUser(id, password string) *Student {
 	s.ID = id
@@ -65,7 +72,7 @@ func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 }
 
 // PostWithSession returns parse tree for the resp of the request.
-func (s *Student) PostWithSession(url string, formData map[string]string) (*html.Node, error) {
+func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*html.Node, error) {
 	resp, err := s.NewRequest().SetHeader("Referer", "https://jwcjwxt1.fzu.edu.cn/").SetQueryParam("id", s.Identifier).SetFormData(formData).Post(url)
 
 	s.NewRequest().EnableTrace()
@@ -74,7 +81,7 @@ func (s *Student) PostWithSession(url string, formData map[string]string) (*html
 		return nil, errno.HTTPQueryError.WithErr(err)
 	}
 
-	// 会话过期 TODO: 判断条件有点简陋
+	// Identifier缺失 TODO: 判断条件有点简陋
 	if strings.Contains(string(resp.Body()), "处理URL失败") {
 		return nil, errno.SessionExpiredError
 	}
