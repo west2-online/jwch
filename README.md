@@ -32,7 +32,7 @@ For more detail, plz visit API docs.
 - [X] Automatic code identification
 - [X] Set any apis but not implement
 - [X] Empty Rooms
-- [ ] Using Courrency
+- [X] Using Currency
 - [ ] Complete all apis
 - [ ] Benchmark test
 - [ ] Bug check & fix

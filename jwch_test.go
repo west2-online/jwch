@@ -36,6 +36,12 @@ func login() error {
 	return nil
 }
 
+func Test_GetIdentifierAndCookies(t *testing.T) {
+	Identifier, cookies := stu.GetIdentifierAndCookies()
+	fmt.Println(Identifier)
+	fmt.Println(cookies)
+}
+
 func Test_Login(t *testing.T) {
 	err := login()
 	if err != nil {

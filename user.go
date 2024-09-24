@@ -2,6 +2,7 @@ package jwch
 
 import (
 	"encoding/json"
+	"net/http"
 	"regexp"
 
 	"github.com/west2-online/jwch/constants"
@@ -126,6 +127,15 @@ func (s *Student) Login() error {
 	s.SetIdentifier(data[1])
 
 	return nil
+}
+
+// 方面服务端进行测试设置的接口
+func (s *Student) GetIdentifierAndCookies() (string, []*http.Cookie) {
+	err := s.CheckSession()
+	if err != nil {
+		s.Login()
+	}
+	return s.Identifier, s.client.Cookies
 }
 
 // CheckSession returns not nil if SessionExpired or AccountConflict
