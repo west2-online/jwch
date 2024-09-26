@@ -8,6 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/html"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"reflect"
@@ -137,4 +140,17 @@ func SafeAtoi(s string) int {
 	}
 
 	return n
+}
+
+func ConvertGB2312ToUTF8(input []byte) (string, error) {
+	// 使用 transform.NewReader 进行编码转换
+	reader := transform.NewReader(bytes.NewReader(input), simplifiedchinese.GB18030.NewDecoder())
+
+	// 将转换后的结果读取为 UTF-8 字符串
+	utf8Bytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return "", err
+	}
+
+	return string(utf8Bytes), nil
 }

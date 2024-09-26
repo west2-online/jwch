@@ -1,11 +1,11 @@
 package jwch
 
 import (
+	"github.com/west2-online/jwch/utils"
 	"regexp"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
-	iconv "github.com/djimenez/iconv-go"
 	"github.com/west2-online/jwch/constants"
 )
 
@@ -17,7 +17,7 @@ func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
 	}
 
 	rawCurTerm := htmlquery.InnerText(htmlquery.FindOne(resp, `//html/body/center/div`))
-	rawCurTerm, _ = iconv.ConvertString(rawCurTerm, "gb2312", "utf-8")
+	rawCurTerm, err = utils.ConvertGB2312ToUTF8([]byte(rawCurTerm))
 	curTermRegex := regexp.MustCompile(`当前学期：(\d{6})`)
 	curTerm := curTermRegex.FindStringSubmatch(rawCurTerm)[1]
 
@@ -68,7 +68,7 @@ func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
 
 	rawTermDetail := htmlquery.InnerText(htmlquery.FindOne(resp, `/html/body/table[2]/tbody/tr`))
 	rawTermDetail = strings.ReplaceAll(rawTermDetail, " ", " ")
-	rawTermDetail, _ = iconv.ConvertString(rawTermDetail, "gb2312", "utf-8")
+	rawTermDetail, _ = utils.ConvertGB2312ToUTF8([]byte(rawTermDetail))
 
 	res := &CalTermEvents{
 		TermId:     termId,
