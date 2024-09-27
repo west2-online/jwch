@@ -36,6 +36,20 @@ func login() error {
 	return nil
 }
 
+func Test_GetValidateCode(t *testing.T) {
+	// 获取验证码图片
+	s := NewStudent()
+	resp, err := s.NewRequest().Get("https://jwcjwxt1.fzu.edu.cn/plus/verifycode.asp")
+	if err != nil {
+		t.Error(err)
+	}
+	code, err := GetValidateCode(utils.Base64EncodeHTTPImage(resp.Body()))
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(code)
+}
+
 func Test_GetIdentifierAndCookies(t *testing.T) {
 	Identifier, cookies := stu.GetIdentifierAndCookies()
 	fmt.Println(Identifier)
@@ -124,9 +138,9 @@ func Test_GetQiShanEmptyRoom(t *testing.T) {
 
 	rooms, err := stu.GetQiShanEmptyRoom(EmptyRoomReq{
 		Campus: "旗山校区",
-		Time:   "2024-09-19",
+		Time:   "2024-09-26",
 		Start:  "1",
-		End:    "2",
+		End:    "8",
 	})
 	if err != nil {
 		t.Error(err)

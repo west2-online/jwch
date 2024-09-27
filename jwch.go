@@ -3,6 +3,7 @@ package jwch
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -87,4 +88,25 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 	}
 
 	return htmlquery.Parse(strings.NewReader(strings.TrimSpace(string(resp.Body()))))
+}
+
+// 获取验证码
+func GetValidateCode(image string) (string, error) {
+	// 请求西二服务器，自动识别验证码
+	code := verifyCodeResponse{}
+
+	s := NewStudent()
+	resp, err := s.NewRequest().SetFormData(map[string]string{
+		"validateCode": image,
+	}).Post("https://statistics.fzuhelper.w2fzu.com/api/login/validateCode?validateCode")
+	if err != nil {
+		return "", errno.HTTPQueryError.WithMessage("automatic code identification failed")
+	}
+
+	err = json.Unmarshal(resp.Body(), &code)
+
+	if err != nil {
+		return "", errno.HTTPQueryError.WithErr(err)
+	}
+	return code.Message, nil
 }
