@@ -2,14 +2,15 @@ package jwch
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/west2-online/jwch/utils"
 )
 
-const (
-	username  = "" // 学号
-	password  = "" // 密码
+var (
+	username  = os.Getenv("JWCH_USERNAME") // 学号
+	password  = os.Getenv("JWCH_PASSWORD") // 密码
 	localfile = "logindata.txt"
 )
 

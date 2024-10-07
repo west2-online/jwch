@@ -1,0 +1,25 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: 052106112
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+    - name: Test
+      run: go test
+      env:
+        JWCH_USERNAME: ${{ secrets.SCHOOL_ID }}
+        JWCH_PASSWORD: ${{ secrets.PASSWORD }}
