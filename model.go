@@ -1,8 +1,9 @@
 package jwch
 
 import (
-	"github.com/go-resty/resty/v2"
 	"net/http"
+
+	"github.com/go-resty/resty/v2"
 )
 
 // 学生对象
@@ -128,4 +129,20 @@ type CalTermEvent struct {
 	Name      string `json:"name"`      // 事件名称
 	StartDate string `json:"startDate"` // 开始日期 格式:2024-08-26
 	EndDate   string `json:"endDate"`   // 结束日期 格式:2025-01-17
+}
+
+type CreditStatistics struct {
+	Type  string // 学分类型
+	Gain  string // 已获得
+	Total string // 应获学分
+}
+
+type GPAData struct {
+	Type  string
+	Value string
+}
+
+type GPABean struct {
+	Time string // 绩点计算时间
+	Data []GPAData
 }
