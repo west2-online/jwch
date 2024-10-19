@@ -8,7 +8,7 @@ import (
 	"github.com/west2-online/jwch/constants"
 )
 
-func (s *Student) GetCredit() (creditStatistics []CreditStatistics, err error) {
+func (s *Student) GetCredit() (creditStatistics []*CreditStatistics, err error) {
 
 	resp, err := s.GetWithIdentifier(constants.CreditQueryURL)
 	if err != nil {
@@ -26,7 +26,7 @@ func (s *Student) GetCredit() (creditStatistics []CreditStatistics, err error) {
 	}
 	tables = tables[:len(tables)-1] // 去掉最后一个表格
 
-	creditStatistics = []CreditStatistics{}
+	creditStatistics = make([]*CreditStatistics, 0)
 
 	for _, table := range tables {
 		rows := htmlquery.Find(table, "//tr")
@@ -52,7 +52,7 @@ func (s *Student) GetCredit() (creditStatistics []CreditStatistics, err error) {
 		for i := 0; i < len(temp[0]); i++ {
 			// 去掉个人信息的列（这列第一个单元格式空的）和“修习情况”这个无效的列
 			if strings.TrimSpace(temp[0][i]) != "" && !strings.Contains(temp[0][i], "情况") {
-				bean := CreditStatistics{
+				bean := &CreditStatistics{
 					Type:  temp[0][i],
 					Gain:  temp[2][i],
 					Total: temp[1][i],
@@ -64,7 +64,8 @@ func (s *Student) GetCredit() (creditStatistics []CreditStatistics, err error) {
 
 	return creditStatistics, nil
 }
-func (s *Student) GetGPA() (gpa GPABean, err error) {
+func (s *Student) GetGPA() (gpa *GPABean, err error) {
+	gpa = &GPABean{}
 	resp, err := s.GetWithIdentifier(constants.GPAQueryURL)
 	if err != nil {
 		return gpa, err
