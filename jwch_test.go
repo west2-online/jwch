@@ -308,3 +308,25 @@ func Test_GetGPA(t *testing.T) {
 
 	fmt.Println(utils.PrintStruct(gpa))
 }
+
+func TestGetUnifiedExam(t *testing.T) {
+	if !islogin {
+		err := login()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+	cet, err := stu.GetCET()
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(cet))
+
+	js, err := stu.GetJS()
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(js))
+}
