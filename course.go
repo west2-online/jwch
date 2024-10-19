@@ -1,3 +1,19 @@
+/*
+Copyright 2024 The west2-online Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package jwch
 
 import (
@@ -16,7 +32,6 @@ import (
 // 获取我的学期
 func (s *Student) GetTerms() (*Term, error) {
 	resp, err := s.GetWithIdentifier(constants.CourseURL)
-
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +58,12 @@ func (s *Student) GetTerms() (*Term, error) {
 
 // 获取我的选课
 func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([]*Course, error) {
-
 	resp, err := s.PostWithIdentifier(constants.CourseURL, map[string]string{
 		"ctl00$ContentPlaceHolder1$DDL_xnxq":  term,
 		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
 		"__VIEWSTATE":                         viewState,
 		"__EVENTVALIDATION":                   eventValidation,
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +77,6 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 	res := make([]*Course, 0)
 
 	for _, node := range list {
-
 		// 教务处的表格HTML是不规范的，因此XPath解析会出现一些BUG
 		if strings.TrimSpace(htmlquery.SelectAttr(node, "style")) == "" {
 			continue
@@ -309,8 +321,8 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 		// TODO: performance optimization
 		res = append(res, &Course{
 			Name:             htmlquery.OutputHTML(info[1], false),
-			Syllabus:         "https://jwcjwxt2.fzu.edu.cn:81" + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 0)),
-			LessonPlan:       "https://jwcjwxt2.fzu.edu.cn:81" + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 1)),
+			Syllabus:         constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 0)),
+			LessonPlan:       constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 1)),
 			Teacher:          htmlquery.OutputHTML(info[7], false),
 			ScheduleRules:    scheduleRules,
 			RawScheduleRules: strings.Join(courseInfo8, "\n"),

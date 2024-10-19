@@ -1,3 +1,19 @@
+/*
+Copyright 2024 The west2-online Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package jwch
 
 import (
@@ -10,10 +26,10 @@ import (
 type Student struct {
 	ID       string         `json:"id"`       // 学号
 	Password string         `json:"password"` // 密码
-	cookies  []*http.Cookie //cookies中将包含session_id和其他数据
-	//如果我们使用client进行登陆的话，此时该字段失效，因为client会在登录时自动保存登陆凭证（session）
-	//所以该字段用于其他服务调用时传递登陆凭证
-	Identifier string        //位于url上id=....的一个标识符，主要用于组成url
+	cookies  []*http.Cookie // cookies中将包含session_id和其他数据
+	// 如果我们使用client进行登陆的话，此时该字段失效，因为client会在登录时自动保存登陆凭证（session）
+	// 所以该字段用于其他服务调用时传递登陆凭证
+	Identifier string        // 位于url上id=....的一个标识符，主要用于组成url
 	client     *resty.Client // Request对象
 }
 

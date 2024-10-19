@@ -1,13 +1,30 @@
+/*
+Copyright 2024 The west2-online Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package jwch
 
 import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/net/html"
+
 	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/errno"
 	"github.com/west2-online/jwch/utils"
-	"golang.org/x/net/html"
 
 	"github.com/antchfx/htmlquery"
 )
@@ -15,7 +32,6 @@ import (
 // 获取成绩，由于教务处缺陷，这里会返回全部的成绩
 func (s *Student) GetMarks() (resp []*Mark, err error) {
 	res, err := s.GetWithIdentifier(constants.MarksQueryURL)
-
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +45,6 @@ func (s *Student) GetMarks() (resp []*Mark, err error) {
 	resp = make([]*Mark, 0)
 
 	for _, node := range list {
-
 		// 教务处的表格HTML是不规范的，因此XPath解析会出现一些BUG
 		if strings.TrimSpace(htmlquery.SelectAttr(node, "style")) == "" {
 			continue

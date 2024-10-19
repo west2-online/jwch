@@ -1,3 +1,19 @@
+/*
+Copyright 2024 The west2-online Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package jwch
 
 import (
@@ -33,7 +49,6 @@ func (s *Student) Login() error {
 	passMD5 := utils.Md5Hash(s.Password, 16)
 	// 获取验证码图片
 	resp, err := s.NewRequest().Get("https://jwcjwxt1.fzu.edu.cn/plus/verifycode.asp")
-
 	if err != nil {
 		return errno.HTTPQueryError.WithErr(err)
 	}
@@ -41,13 +56,12 @@ func (s *Student) Login() error {
 	// 请求西二服务器，自动识别验证码
 	resp, err = s.NewRequest().SetFormData(map[string]string{
 		"validateCode": utils.Base64EncodeHTTPImage(resp.Body()),
-	}).Post("https://statistics.fzuhelper.w2fzu.com/api/login/validateCode?validateCode")
+	}).Post(constants.AutoCaptchaVerifyURL)
 	if err != nil {
 		return errno.HTTPQueryError.WithMessage("automatic code identification failed")
 	}
 
 	err = json.Unmarshal(resp.Body(), &code)
-
 	if err != nil {
 		return errno.HTTPQueryError.WithErr(err)
 	}
@@ -68,7 +82,7 @@ func (s *Student) Login() error {
 	}
 
 	// 获取token，第一个是匹配的全部字符，第二个是我们需要的
-	token := regexp.MustCompile(`token=(.*?)&`).FindStringSubmatch(string(err.Error()))
+	token := regexp.MustCompile(`token=(.*?)&`).FindStringSubmatch(err.Error())
 	if len(token) < 1 {
 		return errno.LoginCheckFailedError
 	}
@@ -82,13 +96,11 @@ func (s *Student) Login() error {
 	}).SetFormData(map[string]string{
 		"token": token[1],
 	}).Post(constants.SSOLoginURL)
-
 	if err != nil {
 		return errno.HTTPQueryError.WithErr(err)
 	}
 
 	err = json.Unmarshal(resp.Body(), &loginResp)
-
 	if err != nil {
 		return errno.HTTPQueryError.WithErr(err)
 	}
@@ -130,12 +142,14 @@ func (s *Student) Login() error {
 }
 
 // 方面服务端进行测试设置的接口
-func (s *Student) GetIdentifierAndCookies() (string, []*http.Cookie) {
+func (s *Student) GetIdentifierAndCookies() (string, []*http.Cookie, error) {
 	err := s.CheckSession()
 	if err != nil {
-		s.Login()
+		if err := s.Login(); err != nil {
+			return "", nil, err
+		}
 	}
-	return s.Identifier, s.client.Cookies
+	return s.Identifier, s.client.Cookies, nil
 }
 
 // CheckSession returns not nil if SessionExpired or AccountConflict
@@ -166,7 +180,6 @@ func (s *Student) CheckSession() error {
 // 获取学生个人信息
 func (s *Student) GetInfo() (resp *StudentDetail, err error) {
 	res, err := s.GetWithIdentifier(constants.UserInfoURL)
-
 	if err != nil {
 		return nil, err
 	}

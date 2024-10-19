@@ -1,9 +1,26 @@
+/*
+Copyright 2024 The west2-online Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package jwch
 
 import (
 	"github.com/antchfx/htmlquery"
-	"github.com/west2-online/jwch/constants"
 	"golang.org/x/net/html"
+
+	"github.com/west2-online/jwch/constants"
 )
 
 func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
@@ -15,7 +32,7 @@ func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	//按照教室类型进行并发访问
+	// 按照教室类型进行并发访问
 	channels := make([]chan struct {
 		res []string
 		err error
@@ -29,7 +46,8 @@ func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
 		go func(t string, ch chan struct {
 			res []string
 			err error
-		}) {
+		},
+		) {
 			res, err := s.PostWithIdentifier(constants.ClassroomQueryURL,
 				map[string]string{
 					"__VIEWSTATE":                         emptyRoomState["VIEWSTATE"],
@@ -65,7 +83,6 @@ func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
 				err error
 			}{res: rooms, err: nil}
 		}(t, channels[i])
-
 	}
 	for _, ch := range channels {
 		temp := <-ch
@@ -83,8 +100,8 @@ func (s *Student) GetQiShanEmptyRoom(req EmptyRoomReq) ([]string, error) {
 		return nil, err
 	}
 	var rooms []string
-	//这里按照building的顺序进行并发爬取
-	//创建channel数组
+	// 这里按照building的顺序进行并发爬取
+	// 创建channel数组
 	channels := make([]chan struct {
 		res []string
 		err error
@@ -98,7 +115,8 @@ func (s *Student) GetQiShanEmptyRoom(req EmptyRoomReq) ([]string, error) {
 		go func(index int, building string, ch chan struct {
 			res []string
 			err error
-		}) {
+		},
+		) {
 			roomTypes, emptyRoomState, err := s.getEmptyRoomTypes(viewStateMap, building, req)
 			if err != nil {
 				ans := struct {
@@ -175,7 +193,6 @@ func (s *Student) getEmptyRoomState() (map[string]string, error) {
 		"VIEWSTATE":       viewState,
 		"EVENTVALIDATION": eventValidation,
 	}, nil
-
 }
 
 // 获取教室类型

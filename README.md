@@ -65,5 +65,17 @@ For more detail, plz visit API docs.
     └── utils.go
 ```
 
-### 飞书文档：
+### Lark Docs
 https://west2-online.feishu.cn/wiki/HAZUwmgkWiRq4zkBkAecu5eGn9n
+
+### Local Action Test
+
+we can use act to local github action test.
+
+1. Create `act_secret_file` in root folder
+2. Insert items:
+```env
+USERNAME_23="YourJwchAccount"
+PASSWORD_23="YourJwchSecret"
+```
+3. use `act push --secret-file ./act_secret_file`

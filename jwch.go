@@ -1,3 +1,19 @@
+/*
+Copyright 2024 The west2-online Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package jwch
 
 import (
@@ -7,6 +23,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/errno"
 
 	"github.com/antchfx/htmlquery"
@@ -17,8 +34,10 @@ import (
 func NewStudent() *Student {
 	// Disable HTTP/2.0
 	// Disable Redirect
-	client := resty.New().SetTransport(&http.Transport{TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}).SetRedirectPolicy(resty.NoRedirectPolicy())
+	client := resty.New().SetTransport(&http.Transport{
+		TLSNextProto:    make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}).SetRedirectPolicy(resty.NoRedirectPolicy())
 
 	return &Student{
 		client: client,
@@ -58,8 +77,7 @@ func (s *Student) NewRequest() *resty.Request {
 }
 
 func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
-	resp, err := s.NewRequest().SetHeader("Referer", "https://jwcjwxt1.fzu.edu.cn/").SetQueryParam("id", s.Identifier).Get(url)
-
+	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).Get(url)
 	if err != nil {
 		return nil, errno.HTTPQueryError.WithErr(err)
 	}
@@ -74,7 +92,7 @@ func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 
 // PostWithSession returns parse tree for the resp of the request.
 func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*html.Node, error) {
-	resp, err := s.NewRequest().SetHeader("Referer", "https://jwcjwxt1.fzu.edu.cn/").SetQueryParam("id", s.Identifier).SetFormData(formData).Post(url)
+	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).SetFormData(formData).Post(url)
 
 	s.NewRequest().EnableTrace()
 
@@ -104,7 +122,6 @@ func GetValidateCode(image string) (string, error) {
 	}
 
 	err = json.Unmarshal(resp.Body(), &code)
-
 	if err != nil {
 		return "", errno.HTTPQueryError.WithErr(err)
 	}

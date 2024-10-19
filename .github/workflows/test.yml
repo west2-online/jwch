@@ -8,7 +8,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    environment: 052106112
 
     steps:
       - uses: actions/checkout@v4
@@ -16,10 +15,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.22'
+          go-version: '1.23'
 
       - name: Test
-        run: go test
+        run: go test -v ./...
         env:
-          JWCH_USERNAME: ${{ secrets.SCHOOL_ID }}
-          JWCH_PASSWORD: ${{ secrets.PASSWORD }}
+          JWCH_USERNAME: ${{ secrets.USERNAME_23 }}
+          JWCH_PASSWORD: ${{ secrets.PASSWORD_23 }}
