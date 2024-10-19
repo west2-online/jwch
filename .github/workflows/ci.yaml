@@ -31,7 +31,7 @@ jobs:
         run: |
           echo "refer to https://github.com/mvdan/gofumpt for detailed info" &&
           GO111MODULE=on go install mvdan.cc/gofumpt@v0.4.0 &&
-          make fmt && git add pkg cmd &&
+          make fmt && git add . &&
           git diff --cached --exit-code || (echo 'Please run "make fmt" to verify fmt' && exit 1);
 
   vet:
@@ -70,5 +70,5 @@ jobs:
       - uses: actions/checkout@v3
       - name: Check license header
         run: |
-          make license && git add pkg cmd &&
+          make license && git add . &&
           git diff --cached --exit-code || (echo 'Please run "make license" to add license headers' && exit 1);
