@@ -146,3 +146,9 @@ type GPABean struct {
 	Time string // 绩点计算时间
 	Data []GPAData
 }
+
+type UnifiedExam struct {
+	Name  string
+	Score string
+	Term  string
+}

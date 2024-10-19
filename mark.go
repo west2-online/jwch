@@ -7,6 +7,7 @@ import (
 	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/errno"
 	"github.com/west2-online/jwch/utils"
+	"golang.org/x/net/html"
 
 	"github.com/antchfx/htmlquery"
 )
@@ -61,13 +62,57 @@ func (s *Student) GetMarks() (resp []*Mark, err error) {
 }
 
 // 获取CET成绩
-func (s *Student) GetCET() error {
+func (s *Student) GetCET() ([]*UnifiedExam, error) {
 	resp, err := s.GetWithIdentifier(constants.CETQueryURL)
-
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	fmt.Println(resp)
-	return nil
+	return s.parseUnifiedExam(resp)
+}
+
+// 获取省计算机成绩
+func (s *Student) GetJS() ([]*UnifiedExam, error) {
+	resp, err := s.GetWithIdentifier(constants.JSQueryURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.parseUnifiedExam(resp)
+}
+
+// 解析统一考试成绩
+func (s *Student) parseUnifiedExam(resp *html.Node) ([]*UnifiedExam, error) {
+	var exams []*UnifiedExam
+
+	// 查找包含成绩的表格
+	table := htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_DataList_xxk"]`)
+	if table == nil {
+		return nil, fmt.Errorf("failed to find the exam table")
+	}
+
+	// 查找所有考试成绩行
+	rows := htmlquery.Find(table, `.//tr[@onmouseover]`)
+	if len(rows) == 0 {
+		return nil, nil // 这里不返回错误，因为有可能没有考试成绩
+	}
+
+	// 遍历每一行，提取成绩信息
+	for _, row := range rows {
+		tds := htmlquery.Find(row, `.//td`)
+		if len(tds) < 3 {
+			continue // 如果某行的列数不满足要求则跳过
+		}
+
+		// 创建一个新的 UnifiedExam 对象
+		exam := &UnifiedExam{
+			Name:  htmlquery.InnerText(tds[0]),
+			Score: htmlquery.InnerText(tds[2]),
+			Term:  htmlquery.InnerText(tds[1]),
+		}
+
+		exams = append(exams, exam)
+	}
+
+	return exams, nil
 }
