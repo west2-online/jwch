@@ -277,3 +277,34 @@ func Test_GetTermEvents(t *testing.T) {
 
 	fmt.Println(utils.PrintStruct(events))
 }
+
+func Test_GetCredit(t *testing.T) {
+	if !islogin {
+		err := login()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	credit, err := stu.GetCredit()
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(credit))
+}
+
+func Test_GetGPA(t *testing.T) {
+	if !islogin {
+		err := login()
+		if err != nil {
+			t.Error(err)
+		}
+	}
+	gpa, err := stu.GetGPA()
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(utils.PrintStruct(gpa))
+}
