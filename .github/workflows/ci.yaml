@@ -45,7 +45,7 @@ jobs:
           cache: false
       - name: Verify govet
         run: |
-          make vet && git add pkg cmd &&
+          make vet && git add . &&
           git diff --cached --exit-code || (echo 'Please run "make vet" to verify govet' && exit 1);
 
   lint:
