@@ -320,12 +320,18 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 
 		// TODO: performance optimization
 		res = append(res, &Course{
-			Name:             htmlquery.OutputHTML(info[1], false),
-			Syllabus:         constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 0)),
-			LessonPlan:       constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 1)),
+			Type:       htmlquery.OutputHTML(info[0], false),
+			Name:       htmlquery.OutputHTML(info[1], false),
+			Syllabus:   constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 0)),
+			LessonPlan: constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 1)),
+			// PaymentStatus: safeExtractionFirst(info[3], "font"),
+			Credits:          safeExtractionFirst(info[4], "span"),
+			ElectiveType:     utils.GetChineseCharacter(htmlquery.OutputHTML(info[5], false)),
+			ExamType:         utils.GetChineseCharacter(htmlquery.OutputHTML(info[6], false)),
 			Teacher:          htmlquery.OutputHTML(info[7], false),
 			ScheduleRules:    scheduleRules,
 			RawScheduleRules: strings.Join(courseInfo8, "\n"),
+			RawExamTime:      strings.TrimSpace(htmlquery.InnerText(info[9])),
 			RawAdjust:        strings.Join(courseInfo11, "\n"),
 			Remark:           htmlquery.OutputHTML(info[10], false),
 		})
