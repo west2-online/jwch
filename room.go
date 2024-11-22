@@ -17,9 +17,10 @@ limitations under the License.
 package jwch
 
 import (
+	"strings"
+
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
-	"strings"
 
 	"github.com/west2-online/jwch/constants"
 )
