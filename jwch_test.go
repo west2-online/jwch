@@ -267,3 +267,13 @@ func TestGetUnifiedExam(t *testing.T) {
 
 	// 不允许输出考试成绩信息
 }
+
+// 考场信息
+func TestGetExamRoomInfo(t *testing.T) {
+	_, err := stu.GetExamRoom(ExamRoomReq{
+		Term: "202401",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+}

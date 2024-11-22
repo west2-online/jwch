@@ -174,3 +174,16 @@ type UnifiedExam struct {
 	Score string
 	Term  string
 }
+
+type ExamRoomReq struct {
+	Term string
+}
+
+type ExamRoomInfo struct {
+	CourseName string // 课程名称
+	Credit     string // 学分
+	Teacher    string // 任课教师
+	Date       string // 考试日期
+	Time       string // 考试时间
+	Location   string // 考试地点
+}
