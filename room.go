@@ -17,6 +17,8 @@ limitations under the License.
 package jwch
 
 import (
+	"strings"
+
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
 
@@ -24,7 +26,7 @@ import (
 )
 
 func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
-	viewStateMap, err := s.getEmptyRoomState()
+	viewStateMap, err := s.getState(constants.ClassroomQueryURL)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +97,7 @@ func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
 }
 
 func (s *Student) GetQiShanEmptyRoom(req EmptyRoomReq) ([]string, error) {
-	viewStateMap, err := s.getEmptyRoomState()
+	viewStateMap, err := s.getState(constants.ClassroomQueryURL)
 	if err != nil {
 		return nil, err
 	}
@@ -182,8 +184,9 @@ func (s *Student) GetQiShanEmptyRoom(req EmptyRoomReq) ([]string, error) {
 }
 
 // 获取VIEWSTATE和EVENTVALIDATION
-func (s *Student) getEmptyRoomState() (map[string]string, error) {
-	resp, err := s.GetWithIdentifier(constants.ClassroomQueryURL)
+// 抽象成一个函数, 因为基本上每个请求都需要这两个参数
+func (s *Student) getState(url string) (map[string]string, error) {
+	resp, err := s.GetWithIdentifier(url)
 	if err != nil {
 		return nil, err
 	}
@@ -250,4 +253,61 @@ func parseEmptyRoom(doc *html.Node) ([]string, error) {
 		res = append(res, htmlquery.InnerText(opt))
 	}
 	return res, nil
+}
+
+// 考场查询
+func (s *Student) GetExamRoom(req ExamRoomReq) ([]*ExamRoomInfo, error) {
+	viewStateMap, err := s.getState(constants.ExamRoomQueryURL)
+	if err != nil {
+		return nil, err
+	}
+	res, err := s.PostWithIdentifier(constants.ExamRoomQueryURL, map[string]string{
+		"__VIEWSTATE":                         viewStateMap["VIEWSTATE"],
+		"__EVENTVALIDATION":                   viewStateMap["EVENTVALIDATION"],
+		"ctl00$ContentPlaceHolder1$DDL_xnxq":  req.Term,
+		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
+	})
+	if err != nil {
+		return nil, err
+	}
+	examInfos, err := parseExamRoom(res)
+	if err != nil {
+		return nil, err
+	}
+	return examInfos, nil
+}
+
+func parseExamRoom(doc *html.Node) ([]*ExamRoomInfo, error) {
+	var examInfos []*ExamRoomInfo
+	sel := htmlquery.FindOne(doc, "//*[@id=\"ContentPlaceHolder1_DataList_xxk\"]")
+	rows := htmlquery.Find(sel, ".//tr[@onmouseover]")
+	for _, row := range rows {
+		// 提取单元格内容
+		cells := htmlquery.Find(row, "./td")
+		// 获取每一列的内容
+		courseName := strings.TrimSpace(htmlquery.InnerText(cells[0]))
+		credit := strings.TrimSpace(htmlquery.InnerText(cells[1]))
+		teacher := strings.TrimSpace(htmlquery.InnerText(cells[2]))
+		dateTimeAndLocation := strings.TrimSpace(htmlquery.InnerText(cells[3]))
+		// 如果为空，说明目前没有安排考试
+		if dateTimeAndLocation == "" {
+			continue
+		}
+		// example: 2024年11月17日 12:30-17:30  旗山数计3-404
+		array := strings.Fields(dateTimeAndLocation)
+		date := array[0]
+		time := array[1]
+		location := array[2]
+		// 将数据存入结构体
+		examInfo := &ExamRoomInfo{
+			CourseName: courseName,
+			Credit:     credit,
+			Teacher:    teacher,
+			Date:       date,
+			Time:       time,
+			Location:   location,
+		}
+		examInfos = append(examInfos, examInfo)
+	}
+	return examInfos, nil
 }
