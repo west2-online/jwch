@@ -79,12 +79,12 @@ func (s *Student) NewRequest() *resty.Request {
 func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).Get(url)
 	if err != nil {
-		return nil, errno.CookieExpiredError.WithErr(err)
+		return nil, errno.SSOLoginFailedError.WithErr(err)
 	}
 
 	// 会话过期 TODO: 判断条件有点简陋
 	if strings.Contains(string(resp.Body()), "重新登录") {
-		return nil, errno.CookieExpiredError
+		return nil, errno.SSOLoginFailedError
 	}
 
 	return htmlquery.Parse(bytes.NewReader(resp.Body()))
@@ -97,12 +97,12 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 	s.NewRequest().EnableTrace()
 
 	if err != nil {
-		return nil, errno.CookieExpiredError.WithErr(err)
+		return nil, errno.SSOLoginFailedError.WithErr(err)
 	}
 
 	// Identifier缺失 TODO: 判断条件有点简陋
 	if strings.Contains(string(resp.Body()), "处理URL失败") {
-		return nil, errno.CookieExpiredError
+		return nil, errno.SSOLoginFailedError
 	}
 
 	return htmlquery.Parse(strings.NewReader(strings.TrimSpace(string(resp.Body()))))

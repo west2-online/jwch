@@ -27,11 +27,9 @@ var (
 
 	// User
 	AccountConflictError  = NewErrNo(AuthorizationFailedErrCode, "account conflict")
-	CookieExpiredError    = NewErrNo(AuthorizationFailedErrCode, "cookie expired")
+	CookieError           = NewErrNo(AuthorizationFailedErrCode, "id error or session expired")
 	LoginCheckFailedError = NewErrNo(AuthorizationFailedErrCode, "login check failed")
 	SSOLoginFailedError   = NewErrNo(AuthorizationFailedErrCode, "sso login failed")
-	GetCookieFailedError  = NewErrNo(AuthorizationFailedErrCode, "get cookie failed")
-
 
 	// HTTP
 	HTTPQueryError = NewErrNo(HTTPQueryErrorCode, "HTTP query failed")
