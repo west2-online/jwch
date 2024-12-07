@@ -133,7 +133,7 @@ func (s *Student) Login() error {
 	data := regexp.MustCompile(`id=(.*?)&`).FindStringSubmatch(err.Error())
 
 	if len(data) < 1 {
-		return errno.GetCookieFailedError
+		return errno.GetIdentifierFailedError
 	}
 
 	s.SetIdentifier(data[1])

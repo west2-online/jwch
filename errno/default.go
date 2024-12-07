@@ -32,6 +32,7 @@ var (
 	SSOLoginFailedError   = NewErrNo(AuthorizationFailedErrCode, "sso login failed")
 	GetCookieFailedError  = NewErrNo(AuthorizationFailedErrCode, "get cookie failed")
 
+
 	// HTTP
 	HTTPQueryError = NewErrNo(HTTPQueryErrorCode, "HTTP query failed")
 	HTMLParseError = NewErrNo(HTTPQueryErrorCode, "HTML parse failed")
