@@ -127,13 +127,13 @@ func (s *Student) Login() error {
 
 	// 这里是err == nil 因为禁止了重定向，正常登录是会出现异常的
 	if err == nil {
-		return errno.SSOLoginFailedError
+		return errno.CookieError
 	}
 
 	data := regexp.MustCompile(`id=(.*?)&`).FindStringSubmatch(err.Error())
 
 	if len(data) < 1 {
-		return errno.SSOLoginFailedError
+		return errno.CookieError
 	}
 
 	s.SetIdentifier(data[1])
@@ -167,7 +167,7 @@ func (s *Student) CheckSession() error {
 	res := htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_LB_xh"]`)
 
 	if res == nil {
-		return errno.SSOLoginFailedError.WithErr(err)
+		return errno.CookieError.WithErr(err)
 	}
 
 	if htmlquery.OutputHTML(res, false) != s.ID {
