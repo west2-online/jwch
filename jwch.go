@@ -51,7 +51,7 @@ func (s *Student) WithLoginData(identifier string, cookies []*http.Cookie) *Stud
 	return s
 }
 
-// 携带账号密码，这部分考虑整合到Login中，因为实际上我们不需要这个东西
+// WithUser 携带账号密码，这部分考虑整合到Login中，因为实际上我们不需要这个东西
 func (s *Student) WithUser(id, password string) *Student {
 	s.ID = id
 	s.Password = password
@@ -79,36 +79,36 @@ func (s *Student) NewRequest() *resty.Request {
 func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).Get(url)
 	if err != nil {
-		return nil, errno.HTTPQueryError.WithErr(err)
+		return nil, errno.IdentifierExpiredError.WithErr(err)
 	}
 
 	// 会话过期 TODO: 判断条件有点简陋
 	if strings.Contains(string(resp.Body()), "重新登录") {
-		return nil, errno.SessionExpiredError
+		return nil, errno.IdentifierExpiredError
 	}
 
 	return htmlquery.Parse(bytes.NewReader(resp.Body()))
 }
 
-// PostWithSession returns parse tree for the resp of the request.
+// PostWithIdentifier returns parse tree for the resp of the request.
 func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*html.Node, error) {
 	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).SetFormData(formData).Post(url)
 
 	s.NewRequest().EnableTrace()
 
 	if err != nil {
-		return nil, errno.HTTPQueryError.WithErr(err)
+		return nil, errno.IdentifierExpiredError.WithErr(err)
 	}
 
 	// Identifier缺失 TODO: 判断条件有点简陋
 	if strings.Contains(string(resp.Body()), "处理URL失败") {
-		return nil, errno.SessionExpiredError
+		return nil, errno.IdentifierExpiredError
 	}
 
 	return htmlquery.Parse(strings.NewReader(strings.TrimSpace(string(resp.Body()))))
 }
 
-// 获取验证码
+// GetValidateCode 获取验证码
 func GetValidateCode(image string) (string, error) {
 	// 请求西二服务器，自动识别验证码
 	code := verifyCodeResponse{}

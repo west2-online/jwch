@@ -23,14 +23,14 @@ var (
 	ServiceError             = NewErrNo(ServiceErrorCode, "service is unable to start successfully")
 	ServiceInternalError     = NewErrNo(ServiceErrorCode, "service Internal Error")
 	ParamError               = NewErrNo(ParamErrorCode, "parameter error")
-	AuthorizationFailedError = NewErrNo(AuthorizationFailedErrCode, "suthorization failed")
+	AuthorizationFailedError = NewErrNo(AuthorizationFailedErrCode, "authorization failed")
 
 	// User
-	AccountConflictError  = NewErrNo(AuthorizationFailedErrCode, "account conflict")
-	SessionExpiredError   = NewErrNo(AuthorizationFailedErrCode, "session expired")
-	LoginCheckFailedError = NewErrNo(AuthorizationFailedErrCode, "login check failed")
-	SSOLoginFailedError   = NewErrNo(AuthorizationFailedErrCode, "sso login failed")
-	GetSessionFailedError = NewErrNo(AuthorizationFailedErrCode, "get session failed")
+	AccountConflictError     = NewErrNo(AuthorizationFailedErrCode, "account conflict")
+	IdentifierExpiredError   = NewErrNo(AuthorizationFailedErrCode, "session expired")
+	LoginCheckFailedError    = NewErrNo(AuthorizationFailedErrCode, "login check failed")
+	SSOLoginFailedError      = NewErrNo(AuthorizationFailedErrCode, "sso login failed")
+	GetIdentifierFailedError = NewErrNo(AuthorizationFailedErrCode, "get session failed")
 
 	// HTTP
 	HTTPQueryError = NewErrNo(HTTPQueryErrorCode, "HTTP query failed")
