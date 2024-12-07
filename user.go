@@ -39,7 +39,7 @@ type verifyCodeResponse struct {
 	Message string `json:"message"`
 }
 
-// 模拟教务处登录/刷新Session
+// Login 模拟教务处登录/刷新Session
 func (s *Student) Login() error {
 	// 清除cookie
 	s.ClearLoginData()
@@ -127,13 +127,13 @@ func (s *Student) Login() error {
 
 	// 这里是err == nil 因为禁止了重定向，正常登录是会出现异常的
 	if err == nil {
-		return errno.GetSessionFailedError
+		return errno.GetIdentifierFailedError
 	}
 
 	data := regexp.MustCompile(`id=(.*?)&`).FindStringSubmatch(err.Error())
 
 	if len(data) < 1 {
-		return errno.GetSessionFailedError
+		return errno.GetIdentifierFailedError
 	}
 
 	s.SetIdentifier(data[1])
@@ -141,7 +141,7 @@ func (s *Student) Login() error {
 	return nil
 }
 
-// 方面服务端进行测试设置的接口
+// GetIdentifierAndCookies 方面服务端进行测试设置的接口
 func (s *Student) GetIdentifierAndCookies() (string, []*http.Cookie, error) {
 	err := s.CheckSession()
 	if err != nil {
@@ -167,7 +167,7 @@ func (s *Student) CheckSession() error {
 	res := htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_LB_xh"]`)
 
 	if res == nil {
-		return errno.SessionExpiredError.WithErr(err)
+		return errno.IdentifierExpiredError.WithErr(err)
 	}
 
 	if htmlquery.OutputHTML(res, false) != s.ID {
@@ -177,7 +177,7 @@ func (s *Student) CheckSession() error {
 	return nil
 }
 
-// 获取学生个人信息
+// GetInfo 获取学生个人信息
 func (s *Student) GetInfo() (resp *StudentDetail, err error) {
 	res, err := s.GetWithIdentifier(constants.UserInfoURL)
 	if err != nil {

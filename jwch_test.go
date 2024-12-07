@@ -32,8 +32,8 @@ var (
 )
 
 var (
-	islogin bool     = false
-	stu     *Student = NewStudent().WithUser(username, password)
+	islogin = false
+	stu     = NewStudent().WithUser(username, password)
 )
 
 func login() error {

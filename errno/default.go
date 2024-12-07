@@ -26,11 +26,11 @@ var (
 	AuthorizationFailedError = NewErrNo(AuthorizationFailedErrCode, "authorization failed")
 
 	// User
-	AccountConflictError  = NewErrNo(AuthorizationFailedErrCode, "account conflict")
-	SessionExpiredError   = NewErrNo(AuthorizationFailedErrCode, "session expired")
-	LoginCheckFailedError = NewErrNo(AuthorizationFailedErrCode, "login check failed")
-	SSOLoginFailedError   = NewErrNo(AuthorizationFailedErrCode, "sso login failed")
-	GetSessionFailedError = NewErrNo(AuthorizationFailedErrCode, "get session failed")
+	AccountConflictError     = NewErrNo(AuthorizationFailedErrCode, "account conflict")
+	IdentifierExpiredError   = NewErrNo(AuthorizationFailedErrCode, "session expired")
+	LoginCheckFailedError    = NewErrNo(AuthorizationFailedErrCode, "login check failed")
+	SSOLoginFailedError      = NewErrNo(AuthorizationFailedErrCode, "sso login failed")
+	GetIdentifierFailedError = NewErrNo(AuthorizationFailedErrCode, "get session failed")
 
 	// HTTP
 	HTTPQueryError = NewErrNo(HTTPQueryErrorCode, "HTTP query failed")
