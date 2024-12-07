@@ -167,7 +167,7 @@ func (s *Student) CheckSession() error {
 	res := htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_LB_xh"]`)
 
 	if res == nil {
-		return errno.CookieError.WithErr(err)
+		return errno.CookieError
 	}
 
 	if htmlquery.OutputHTML(res, false) != s.ID {

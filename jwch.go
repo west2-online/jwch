@@ -79,7 +79,7 @@ func (s *Student) NewRequest() *resty.Request {
 func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).Get(url)
 	if err != nil {
-		return nil, errno.CookieError.WithErr(err)
+		return nil, errno.CookieError
 	}
 
 	// 会话过期 TODO: 判断条件有点简陋
