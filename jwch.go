@@ -78,11 +78,12 @@ func (s *Student) NewRequest() *resty.Request {
 
 func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).Get(url)
+	// 会话过期：会直接重定向，但我们禁用了重定向，所以会有error
 	if err != nil {
 		return nil, errno.CookieError
 	}
 
-	// 会话过期 TODO: 判断条件有点简陋
+	// 还有一种情况是 id 或 cookie 缺失或者解析错误 TODO: 判断条件有点简陋
 	if strings.Contains(string(resp.Body()), "重新登录") {
 		return nil, errno.CookieError
 	}
@@ -95,12 +96,12 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).SetFormData(formData).Post(url)
 
 	s.NewRequest().EnableTrace()
-
+	// 会话过期：会直接重定向，但我们禁用了重定向，所以会有error
 	if err != nil {
 		return nil, errno.CookieError.WithErr(err)
 	}
 
-	// Identifier缺失 TODO: 判断条件有点简陋
+	// id 或 cookie 缺失或者解析错误 TODO: 判断条件有点简陋
 	if strings.Contains(string(resp.Body()), "处理URL失败") {
 		return nil, errno.CookieError
 	}
