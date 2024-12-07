@@ -79,7 +79,7 @@ func (s *Student) NewRequest() *resty.Request {
 func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).Get(url)
 	if err != nil {
-		return nil, errno.HTTPQueryError.WithErr(err)
+		return nil, errno.SessionExpiredError.WithErr(err)
 	}
 
 	// 会话过期 TODO: 判断条件有点简陋
@@ -97,7 +97,7 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 	s.NewRequest().EnableTrace()
 
 	if err != nil {
-		return nil, errno.HTTPQueryError.WithErr(err)
+		return nil, errno.SessionExpiredError.WithErr(err)
 	}
 
 	// Identifier缺失 TODO: 判断条件有点简陋

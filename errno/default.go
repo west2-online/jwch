@@ -23,7 +23,7 @@ var (
 	ServiceError             = NewErrNo(ServiceErrorCode, "service is unable to start successfully")
 	ServiceInternalError     = NewErrNo(ServiceErrorCode, "service Internal Error")
 	ParamError               = NewErrNo(ParamErrorCode, "parameter error")
-	AuthorizationFailedError = NewErrNo(AuthorizationFailedErrCode, "suthorization failed")
+	AuthorizationFailedError = NewErrNo(AuthorizationFailedErrCode, "authorization failed")
 
 	// User
 	AccountConflictError  = NewErrNo(AuthorizationFailedErrCode, "account conflict")
