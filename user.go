@@ -127,13 +127,13 @@ func (s *Student) Login() error {
 
 	// 这里是err == nil 因为禁止了重定向，正常登录是会出现异常的
 	if err == nil {
-		return errno.GetIdentifierFailedError
+		return errno.GetCookieFailedError
 	}
 
 	data := regexp.MustCompile(`id=(.*?)&`).FindStringSubmatch(err.Error())
 
 	if len(data) < 1 {
-		return errno.GetIdentifierFailedError
+		return errno.GetCookieFailedError
 	}
 
 	s.SetIdentifier(data[1])
