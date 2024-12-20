@@ -5,8 +5,8 @@ go 1.23
 require (
 	github.com/antchfx/htmlquery v1.3.3
 	github.com/go-resty/resty/v2 v2.15.3
-	golang.org/x/net v0.30.0
-	golang.org/x/text v0.19.0
+	golang.org/x/net v0.33.0
+	golang.org/x/text v0.21.0
 )
 
 require (
