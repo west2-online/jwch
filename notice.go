@@ -92,7 +92,6 @@ func parseNoticeInfo(doc *html.Node) ([]*NoticeInfo, error) {
 			URL:   url,
 			Date:  date,
 		}
-		fmt.Println(title)
 		list = append(list, noticeInfo)
 	}
 
