@@ -277,3 +277,10 @@ func TestGetExamRoomInfo(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestGetNoticesInfo(t *testing.T) {
+	_, err := stu.GetNoticeInfo()
+	if err != nil {
+		t.Error(err)
+	}
+}
