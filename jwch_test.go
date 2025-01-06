@@ -279,7 +279,7 @@ func TestGetExamRoomInfo(t *testing.T) {
 }
 
 func TestGetNoticesInfo(t *testing.T) {
-	_, err := stu.GetNoticeInfo()
+	_, err := stu.GetNoticeInfo(&NoticeInfoReq{PageNum: 2})
 	if err != nil {
 		t.Error(err)
 	}
