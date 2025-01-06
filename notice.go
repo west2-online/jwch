@@ -27,11 +27,21 @@ import (
 )
 
 func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, err error) {
+
 	// 获取通知公告页面的总页数
 	res, err := s.PostWithIdentifier(constants.NoticeInfoQueryURL, map[string]string{})
 	if err != nil {
 		return nil, err
 	}
+	// 首页直接爬取
+	if req.PageNum == 1 {
+		list, err = parseNoticeInfo(res)
+		if err != nil {
+			return nil, err
+		}
+		return list, nil
+	}
+	// 分页需要根据页数计算 url
 	lastPageNum, err := getTotalPages(res)
 	if err != nil {
 		return nil, err
@@ -82,6 +92,7 @@ func parseNoticeInfo(doc *html.Node) ([]*NoticeInfo, error) {
 			URL:   url,
 			Date:  date,
 		}
+		fmt.Println(title)
 		list = append(list, noticeInfo)
 	}
 
