@@ -27,7 +27,6 @@ import (
 )
 
 func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, err error) {
-
 	// 获取通知公告页面的总页数
 	res, err := s.PostWithIdentifier(constants.NoticeInfoQueryURL, map[string]string{})
 	if err != nil {
