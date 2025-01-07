@@ -45,6 +45,10 @@ func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, err err
 	if err != nil {
 		return nil, err
 	}
+	// 判断是否超出总页数
+	if req.PageNum > lastPageNum {
+		return nil, fmt.Errorf("超出总页数")
+	}
 	// 根据总页数计算 url
 	num := lastPageNum - req.PageNum + 1
 	url := fmt.Sprintf("https://jwch.fzu.edu.cn/jxtz/%d.htm", num)
