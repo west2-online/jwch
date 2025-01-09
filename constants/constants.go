@@ -29,6 +29,7 @@ const (
 	GPAQueryURL       = "https://jwcjwxt2.fzu.edu.cn:81/student/xyzk/jdpm/GPA_sheet.aspx"
 	VerifyCodeURL     = "https://jwcjwxt1.fzu.edu.cn/plus/verifycode.asp"
 	ExamRoomQueryURL  = "https://jwcjwxt2.fzu.edu.cn:81/student/xkjg/examination/exam_list.aspx"
+	CultivatePlanURL  = "https://jwcjwxt2.fzu.edu.cn:81/pyfa/pyjh/pyjh_list.aspx"
 
 	JwchPrefix  = "https://jwcjwxt2.fzu.edu.cn:81"
 	JwchReferer = "https://jwcjwxt1.fzu.edu.cn/"
