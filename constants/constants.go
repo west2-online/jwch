@@ -31,7 +31,7 @@ const (
 	ExamRoomQueryURL    = "https://jwcjwxt2.fzu.edu.cn:81/student/xkjg/examination/exam_list.aspx"
 	NoticeInfoQueryURL  = "https://jwch.fzu.edu.cn/jxtz.htm"
 	JwchNoticeURLPrefix = "https://jwch.fzu.edu.cn/"
-	CultivatePlanURL  = "https://jwcjwxt2.fzu.edu.cn:81/pyfa/pyjh/pyjh_list.aspx"
+	CultivatePlanURL    = "https://jwcjwxt2.fzu.edu.cn:81/pyfa/pyjh/pyjh_list.aspx"
 
 	JwchPrefix  = "https://jwcjwxt2.fzu.edu.cn:81"
 	JwchReferer = "https://jwcjwxt1.fzu.edu.cn/"

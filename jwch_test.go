@@ -284,6 +284,7 @@ func TestGetNoticesInfo(t *testing.T) {
 		t.Error(err)
 	}
 }
+
 func TestGetCultivatePlan(t *testing.T) {
 	_, err := stu.GetCultivatePlan()
 	if err != nil {
