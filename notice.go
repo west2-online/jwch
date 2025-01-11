@@ -26,42 +26,42 @@ import (
 	"github.com/west2-online/jwch/constants"
 )
 
-func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, err error) {
+func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, totalPages int, err error) {
 	// 获取通知公告页面的总页数
 	res, err := s.PostWithIdentifier(constants.NoticeInfoQueryURL, map[string]string{})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+	// 获取总页数
+	lastPageNum, err := getTotalPages(res)
+	if err != nil {
+		return nil, 0, err
+	}
+	// 判断是否超出总页数
+	if req.PageNum > lastPageNum {
+		return nil, lastPageNum, fmt.Errorf("超出总页数")
 	}
 	// 首页直接爬取
 	if req.PageNum == 1 {
 		list, err = parseNoticeInfo(res)
 		if err != nil {
-			return nil, err
+			return nil, lastPageNum, err
 		}
-		return list, nil
-	}
-	// 分页需要根据页数计算 url
-	lastPageNum, err := getTotalPages(res)
-	if err != nil {
-		return nil, err
-	}
-	// 判断是否超出总页数
-	if req.PageNum > lastPageNum {
-		return nil, fmt.Errorf("超出总页数")
+		return list, lastPageNum, nil
 	}
 	// 根据总页数计算 url
 	num := lastPageNum - req.PageNum + 1
 	url := fmt.Sprintf("https://jwch.fzu.edu.cn/jxtz/%d.htm", num)
 	doc, err := s.PostWithIdentifier(url, map[string]string{})
 	if err != nil {
-		return nil, err
+		return nil, lastPageNum, err
 	}
 	list, err = parseNoticeInfo(doc)
 	if err != nil {
-		return nil, err
+		return nil, lastPageNum, err
 	}
 	// 3. 返回结果
-	return list, nil
+	return list, lastPageNum, nil
 }
 
 // 获取当前页面的所有数据信息
