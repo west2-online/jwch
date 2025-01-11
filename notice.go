@@ -79,6 +79,9 @@ func parseNoticeInfo(doc *html.Node) ([]*NoticeInfo, error) {
 	for _, row := range rows {
 		// 提取日期
 		dateNode := htmlquery.FindOne(row, ".//span[@class='doclist_time']")
+		if dateNode == nil {
+			return nil, fmt.Errorf("cannot find the date")
+		}
 		date := strings.TrimSpace(htmlquery.InnerText(dateNode))
 
 		// 提取标题
