@@ -35,6 +35,7 @@ type Student struct {
 
 // 学生信息详情
 type StudentDetail struct {
+	Name             string `json:"name"`              // 姓名
 	Sex              string `json:"sex"`               // 性别
 	Birthday         string `json:"birthday"`          // 出生日期
 	Phone            string `json:"phont"`             // 手机号
