@@ -185,6 +185,7 @@ func (s *Student) GetInfo() (resp *StudentDetail, err error) {
 	}
 
 	resp = &StudentDetail{
+		Name:             safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xm"]`),
 		Birthday:         safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_csrq"]`),
 		Sex:              safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_xb"]`),
 		Phone:            safeExtractHTMLFirst(res, `//*[@id="ContentPlaceHolder1_LB_lxdh"]`),
