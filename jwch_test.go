@@ -278,6 +278,17 @@ func TestGetExamRoomInfo(t *testing.T) {
 	}
 }
 
+func TestGetNoticesInfo(t *testing.T) {
+	content, totalPages, err := stu.GetNoticeInfo(&NoticeInfoReq{PageNum: 2})
+	fmt.Println(totalPages)
+	if err != nil {
+		t.Error(err)
+	}
+	if content == nil || totalPages == 0 {
+		t.Error("content is nil")
+	}
+}
+
 func TestGetCultivatePlan(t *testing.T) {
 	_, err := stu.GetCultivatePlan()
 	if err != nil {

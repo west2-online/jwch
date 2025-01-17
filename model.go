@@ -187,3 +187,13 @@ type ExamRoomInfo struct {
 	Time       string // 考试时间
 	Location   string // 考试地点
 }
+
+type NoticeInfo struct {
+	Title string // 通知标题
+	URL   string // 通知链接
+	Date  string // 通知日期
+}
+
+type NoticeInfoReq struct {
+	PageNum int // 获取第几页的数据，从 1 开始
+}
