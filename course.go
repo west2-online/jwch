@@ -120,7 +120,7 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 				NewWeekday:    utils.SafeAtoi(adjustMatchArr[6]),
 				NewStartClass: utils.SafeAtoi(adjustMatchArr[7]),
 				NewEndClass:   utils.SafeAtoi(adjustMatchArr[8]),
-				NewLocation:   adjustMatchArr[9],
+				NewLocation:   utils.NormalizeCourseLocation(adjustMatchArr[9]),
 			})
 		}
 
@@ -212,12 +212,12 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 				[2] 旗山西1-206
 			*/
 
-			// 是不是用正则表达式更好一点？
+			// TODO: 是不是用正则表达式更好一点？
 			weekInfo := strings.SplitN(lineData[0], "-", 2)    // [8, 16]
 			dayInfo := strings.SplitN(lineData[1], ":", 2)     // ["星期5", "7-8节"] or ["星期1", "1-2节(双)"]
 			classBasicInfo := strings.Split(dayInfo[1], "节")   // ["7-8", ""] or ["1-2", "(双)"]
 			classInfo := strings.Split(classBasicInfo[0], "-") // ["7", "8"]
-			location := lineData[2]
+			location := utils.NormalizeCourseLocation(lineData[2])
 			startClass := utils.SafeAtoi(classInfo[0])
 			endClass := utils.SafeAtoi(classInfo[1])
 			startWeek := utils.SafeAtoi(weekInfo[0])
