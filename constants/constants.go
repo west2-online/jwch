@@ -27,15 +27,15 @@ const (
 	SchoolCalendarURL   = "https://jwcjwxt2.fzu.edu.cn:82/xl.asp"
 	CreditQueryURL      = "https://jwcjwxt2.fzu.edu.cn:81/student/xyzk/xftj/CreditStatistics.aspx"
 	GPAQueryURL         = "https://jwcjwxt2.fzu.edu.cn:81/student/xyzk/jdpm/GPA_sheet.aspx"
-	VerifyCodeURL       = "https://jwcjwxt1.fzu.edu.cn/plus/verifycode.asp"
+	VerifyCodeURL       = "https://jwcjwxt2.fzu.edu.cn:82/plus/verifycode.asp"
 	ExamRoomQueryURL    = "https://jwcjwxt2.fzu.edu.cn:81/student/xkjg/examination/exam_list.aspx"
 	NoticeInfoQueryURL  = "https://jwch.fzu.edu.cn/jxtz.htm"
 	JwchNoticeURLPrefix = "https://jwch.fzu.edu.cn/"
 	CultivatePlanURL    = "https://jwcjwxt2.fzu.edu.cn:81/pyfa/pyjh/pyjh_list.aspx"
 
 	JwchPrefix  = "https://jwcjwxt2.fzu.edu.cn:81"
-	JwchReferer = "https://jwcjwxt1.fzu.edu.cn/"
-	JwchOrigin  = "https://jwcjwxt1.fzu.edu.cn/"
+	JwchReferer = "https://jwcjwxt2.fzu.edu.cn:82/"
+	JwchOrigin  = "https://jwcjwxt2.fzu.edu.cn:82/"
 
 	AutoCaptchaVerifyURL = "https://statistics.fzuhelper.w2fzu.com/api/login/validateCode?validateCode"
 )
