@@ -48,7 +48,7 @@ func (s *Student) Login() error {
 	loginResp := ssoLoginResponse{}
 	passMD5 := utils.Md5Hash(s.Password, 16)
 	// 获取验证码图片
-	resp, err := s.NewRequest().Get("https://jwcjwxt1.fzu.edu.cn/plus/verifycode.asp")
+	resp, err := s.NewRequest().Get("https://jwcjwxt2.fzu.edu.cn:82/plus/verifycode.asp")
 	if err != nil {
 		return errno.HTTPQueryError.WithErr(err)
 	}
@@ -74,7 +74,7 @@ func (s *Student) Login() error {
 		"Verifycode": code.Message,
 		"muser":      s.ID,
 		"passwd":     passMD5,
-	}).Post("https://jwcjwxt1.fzu.edu.cn/logincheck.asp")
+	}).Post("https://jwcjwxt2.fzu.edu.cn:82/logincheck.asp")
 
 	// 由于禁用了302，这里正常情况下会返回一个错误，跳转链接中包含了我们要的全部信息
 	if err == nil {
@@ -112,8 +112,8 @@ func (s *Student) Login() error {
 
 	// 获取cookies
 	resp, err = s.NewRequest().SetHeaders(map[string]string{
-		"Referer": "https://jwcjwxt1.fzu.edu.cn/",
-		"Origin":  "https://jwcjwxt2.fzu.edu.cn/",
+		"Referer": constants.JwchReferer,
+		"Origin":  constants.JwchOrigin,
 	}).SetQueryParams(map[string]string{
 		"id":       id,
 		"num":      num,
