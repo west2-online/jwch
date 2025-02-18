@@ -66,10 +66,11 @@ func PrintStruct(s interface{}) string {
 	return out.String()
 }
 
+// GetChineseCharacter returns the Chinese characters and number in the string
 func GetChineseCharacter(s string) string {
 	var result string
 	for _, v := range s {
-		if v >= 0x4e00 && v <= 0x9fa5 {
+		if (v >= 0x4e00 && v <= 0x9fa5) || (v >= '0' && v <= '9') {
 			result += string(v)
 		}
 	}
