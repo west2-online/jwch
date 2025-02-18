@@ -100,6 +100,7 @@ func Test_GetCourse(t *testing.T) {
 	fmt.Println("course num:", len(list))
 
 	// 不允许输出具体课程
+	// fmt.Println(utils.PrintStruct(list))
 }
 
 func Test_GetInfo(t *testing.T) {

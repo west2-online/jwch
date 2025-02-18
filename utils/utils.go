@@ -28,6 +28,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"golang.org/x/net/html"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -167,4 +168,16 @@ func ConvertGB2312ToUTF8(input []byte) (string, error) {
 	}
 
 	return string(utf8Bytes), nil
+}
+
+func NormalizeCourseLocation(location string) string {
+	if location == "旗山物理实验教学中心" || location == "铜盘教学楼" {
+		return location
+	}
+
+	// 去除 {铜盘,旗山} 前缀
+	location = strings.TrimPrefix(location, "铜盘")
+	location = strings.TrimPrefix(location, "旗山")
+
+	return location
 }
