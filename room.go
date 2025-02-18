@@ -17,7 +17,6 @@ limitations under the License.
 package jwch
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
@@ -282,7 +281,7 @@ func parseExamRoom(doc *html.Node) ([]*ExamRoomInfo, error) {
 	var examInfos []*ExamRoomInfo
 	sel := htmlquery.FindOne(doc, "//*[@id=\"ContentPlaceHolder1_DataList_xxk\"]")
 	if sel == nil {
-		return nil, fmt.Errorf("未查询到考试信息")
+		return nil, nil
 	}
 	rows := htmlquery.Find(sel, ".//tr[@onmouseover]")
 	for _, row := range rows {
