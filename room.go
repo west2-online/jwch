@@ -292,15 +292,8 @@ func parseExamRoom(doc *html.Node) ([]*ExamRoomInfo, error) {
 		credit := strings.TrimSpace(htmlquery.InnerText(cells[1]))
 		teacher := strings.TrimSpace(htmlquery.InnerText(cells[2]))
 		dateTimeAndLocation := strings.TrimSpace(htmlquery.InnerText(cells[3]))
-		// 如果为空，说明目前没有安排考试
-		if dateTimeAndLocation == "" {
-			continue
-		}
 		// example: 2024年11月17日 12:30-17:30  旗山数计3-404
-		array := strings.Fields(dateTimeAndLocation)
-		date := array[0]
-		time := array[1]
-		location := array[2]
+		date, time, location := parseDateAndLocation(dateTimeAndLocation)
 		// 将数据存入结构体
 		examInfo := &ExamRoomInfo{
 			CourseName: courseName,
@@ -313,4 +306,16 @@ func parseExamRoom(doc *html.Node) ([]*ExamRoomInfo, error) {
 		examInfos = append(examInfos, examInfo)
 	}
 	return examInfos, nil
+}
+
+// 将日期和地点分开
+func parseDateAndLocation(dateAndLocation string) (date, time, location string) {
+	if dateAndLocation == "" {
+		return "", "", ""
+	}
+	array := strings.Fields(dateAndLocation)
+	date = array[0]
+	time = array[1]
+	location = array[2]
+	return
 }
