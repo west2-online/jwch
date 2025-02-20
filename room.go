@@ -311,7 +311,7 @@ func parseExamRoom(doc *html.Node) ([]*ExamRoomInfo, error) {
 // 将日期和地点分开
 func parseDateAndLocation(dateAndLocation string) (date, time, location string) {
 	if dateAndLocation == "" {
-		return "", "", ""
+		return "", "", "暂无考场数据"
 	}
 	array := strings.Fields(dateAndLocation)
 	date = array[0]
