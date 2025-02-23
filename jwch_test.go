@@ -118,7 +118,7 @@ func Test_GetMarks(t *testing.T) {
 	}
 
 	// 不允许输出成绩
-	fmt.Println(utils.PrintStruct(scores))
+	// fmt.Println(utils.PrintStruct(scores))
 }
 
 // 使用并发后似乎快了1s
