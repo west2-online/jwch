@@ -56,13 +56,21 @@ func (s *Student) GetMarks() (resp []*Mark, err error) {
 			return nil, errno.HTMLParseError.WithMessage("get mark info failed")
 		}
 
+		score := safeExtractHTMLFirst(info[4], "font")
+
+		if score == "成绩尚未录入" {
+			score = "暂无"
+		} else if score == "成绩只录一遍" {
+			score = "录入中"
+		}
+
 		// TODO: performance optimization
 		resp = append(resp, &Mark{
 			Type:          htmlquery.OutputHTML(info[0], false),
 			Semester:      htmlquery.OutputHTML(info[1], false),
 			Name:          htmlquery.OutputHTML(info[2], false),
 			Credits:       safeExtractionFirst(info[3], "span"),
-			Score:         safeExtractionFirst(info[4], "font"),
+			Score:         score,
 			GPA:           htmlquery.OutputHTML(info[5], false),
 			EarnedCredits: htmlquery.OutputHTML(info[6], false),
 			ElectiveType:  utils.GetChineseCharacter(htmlquery.OutputHTML(info[7], false)),

@@ -112,12 +112,13 @@ func Test_GetInfo(t *testing.T) {
 }
 
 func Test_GetMarks(t *testing.T) {
-	_, err := stu.GetMarks()
+	scores, err := stu.GetMarks()
 	if err != nil {
 		t.Error(err)
 	}
 
 	// 不允许输出成绩
+	fmt.Println(utils.PrintStruct(scores))
 }
 
 // 使用并发后似乎快了1s
