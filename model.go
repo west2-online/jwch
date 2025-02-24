@@ -198,3 +198,10 @@ type NoticeInfo struct {
 type NoticeInfoReq struct {
 	PageNum int // 获取第几页的数据，从 1 开始
 }
+
+// LocateDate 当前时间
+type LocateDate struct {
+	Week string
+	Year string
+	Term string
+}

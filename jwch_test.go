@@ -295,3 +295,11 @@ func TestGetCultivatePlan(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestGetLocateDate(t *testing.T) {
+	date, err := stu.GetLocateDate()
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(utils.PrintStruct(date))
+}
