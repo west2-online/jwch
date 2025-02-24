@@ -17,6 +17,7 @@ limitations under the License.
 package jwch
 
 import (
+	_ "io/ioutil"
 	"regexp"
 	"sort"
 	"strconv"
@@ -338,4 +339,21 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 	}
 
 	return res, nil
+}
+
+func (s *Student) GetLocateDate() (*LocateDate, error) {
+	resp, err := s.NewRequest().Get(constants.JwchLocateDateUrl)
+	if err != nil {
+		return nil, err
+	}
+	data := string(resp.Body())
+
+	// 使用正则表达式解析返回内容
+	re := regexp.MustCompile(`var week = "([0-9]+)";\s*//.*\s*var xn = "([0-9]{4})";\s*//.*\s*var xq = "([0-9]{2})";`)
+	matches := re.FindStringSubmatch(data)
+	if len(matches) < 4 {
+		return nil, errno.HTMLParseError.WithMessage("failed to parse response from JWCH_LOCATE_DATE_URL")
+	}
+
+	return &LocateDate{Week: matches[1], Year: matches[2], Term: matches[3]}, nil
 }
