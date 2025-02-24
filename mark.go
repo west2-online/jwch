@@ -37,9 +37,9 @@ func (s *Student) GetMarks() (resp []*Mark, err error) {
 	}
 
 	list := htmlquery.Find(htmlquery.FindOne(res, `//*[@id="ContentPlaceHolder1_DataList_xxk"]/tbody`), "tr")
-	// 防止空指针
+
 	if list == nil || len(list) < 2 {
-		return nil, nil
+		return nil, errno.HTMLParseError.WithMessage("get mark info failed")
 	}
 	// 去除第一个元素，第一个元素是标题栏，有个判断文本是“课程名称”
 	// TODO: 我们如何确保第一个元素一定是标题栏?
@@ -122,7 +122,7 @@ func (s *Student) parseUnifiedExam(resp *html.Node) ([]*UnifiedExam, error) {
 			continue // 如果某行的列数不满足要求则跳过
 		}
 
-		// 创建一个新的 UnifiedExam 对象
+		// 创建一个新的 UnifiedExam 对象g
 		exam := &UnifiedExam{
 			Name:  htmlquery.InnerText(tds[0]),
 			Score: htmlquery.InnerText(tds[2]),
