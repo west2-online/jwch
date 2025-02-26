@@ -18,6 +18,7 @@ package jwch
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
@@ -49,13 +50,7 @@ func (s *Student) GetCultivatePlan() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// xpathExpr := strings.Join([]string{"//tr[td[contains(., '", info.Major, "')]]/td/a[contains(@href, 'pyfa')]/@href"}, "")
-	// 直接不匹配辅修
-	xpathExpr := strings.Join([]string{
-		"//tr[td[contains(., '",
-		info.Major,
-		"') and not(contains(., '第二学士学位'))]]/td/a[contains(@href, 'pyfa')]/@href",
-	}, "")
+	xpathExpr := fmt.Sprintf("//tr[td[matches(string(.), '^（.*?）%s$')]]/td/a[contains(@href, 'pyfa')]/@href", regexp.QuoteMeta(info.Major))
 
 	node := htmlquery.FindOne(res, xpathExpr)
 	if node == nil {
