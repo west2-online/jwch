@@ -290,10 +290,11 @@ func TestGetNoticesInfo(t *testing.T) {
 }
 
 func TestGetCultivatePlan(t *testing.T) {
-	_, err := stu.GetCultivatePlan()
+	url, err := stu.GetCultivatePlan()
 	if err != nil {
 		t.Error(err)
 	}
+	fmt.Println(url)
 }
 
 func TestGetLocateDate(t *testing.T) {
