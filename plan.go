@@ -49,7 +49,14 @@ func (s *Student) GetCultivatePlan() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	xpathExpr := strings.Join([]string{"//tr[td[contains(., '", info.Major, "')]]/td/a[contains(@href, 'pyfa')]/@href"}, "")
+	// xpathExpr := strings.Join([]string{"//tr[td[contains(., '", info.Major, "')]]/td/a[contains(@href, 'pyfa')]/@href"}, "")
+	// 直接不匹配辅修
+	xpathExpr := strings.Join([]string{
+		"//tr[td[contains(., '",
+		info.Major,
+		"') and not(contains(., '第二学士学位'))]]/td/a[contains(@href, 'pyfa')]/@href",
+	}, "")
+
 	node := htmlquery.FindOne(res, xpathExpr)
 	if node == nil {
 		return "", fmt.Errorf("%s", "cultivate plan not found")
