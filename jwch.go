@@ -105,7 +105,6 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 	if strings.Contains(string(resp.Body()), "处理URL失败") {
 		return nil, errno.CookieError
 	}
-
 	return htmlquery.Parse(strings.NewReader(strings.TrimSpace(string(resp.Body()))))
 }
 
