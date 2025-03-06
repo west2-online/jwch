@@ -48,6 +48,10 @@ func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
 	list := htmlquery.Find(resp, `//select[@name="xq"]/option/@value`)
 
 	for _, node := range list {
+		// 只取前6个年份
+		if len(res.Terms) >= 6 {
+			break
+		}
 		rawTerm := htmlquery.SelectAttr(node, "value")
 		/*
 			2024012024082620250117
@@ -84,20 +88,19 @@ func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
 	if err != nil {
 		return nil, err
 	}
-	// 远古校历没有任何内容
-	table := htmlquery.FindOne(resp, `/html/body/table[2]/tbody/tr`)
-	if table == nil {
-		return nil, nil
-	}
-	rawTermDetail := htmlquery.InnerText(table)
-	rawTermDetail = strings.ReplaceAll(rawTermDetail, " ", " ")
-	rawTermDetail, _ = utils.ConvertGB2312ToUTF8([]byte(rawTermDetail))
-
 	res := &CalTermEvents{
 		TermId:     termId,
 		Term:       termId[0:6],
 		SchoolYear: termId[0:4],
 	}
+	// 远古校历没有任何内容
+	table := htmlquery.FindOne(resp, `/html/body/table[2]/tbody/tr`)
+	if table == nil {
+		return res, nil
+	}
+	rawTermDetail := htmlquery.InnerText(table)
+	rawTermDetail = strings.ReplaceAll(rawTermDetail, " ", " ")
+	rawTermDetail, _ = utils.ConvertGB2312ToUTF8([]byte(rawTermDetail))
 
 	termDetail := strings.Split(rawTermDetail, "；")
 
