@@ -84,8 +84,12 @@ func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	rawTermDetail := htmlquery.InnerText(htmlquery.FindOne(resp, `/html/body/table[2]/tbody/tr`))
+	// 远古校历没有任何内容
+	table := htmlquery.FindOne(resp, `/html/body/table[2]/tbody/tr`)
+	if table == nil {
+		return nil, nil
+	}
+	rawTermDetail := htmlquery.InnerText(table)
 	rawTermDetail = strings.ReplaceAll(rawTermDetail, " ", " ")
 	rawTermDetail, _ = utils.ConvertGB2312ToUTF8([]byte(rawTermDetail))
 
@@ -99,7 +103,6 @@ func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
 
 	for _, event := range termDetail {
 		event = strings.TrimSpace(event)
-
 		if event == "" {
 			continue
 		}
@@ -107,15 +110,22 @@ func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
 		rawData := strings.Split(event, "为")
 		rawDate := strings.Split(rawData[0], "至")
 
-		name := strings.TrimSpace(rawData[1])
-		startDate := strings.TrimSpace(rawDate[0])
-		endDate := strings.TrimSpace(rawDate[1])
+		if len(rawDate) >= 2 {
+			name := strings.TrimSpace(rawData[1])
+			startDate := strings.TrimSpace(rawDate[0])
+			endDate := strings.TrimSpace(rawDate[1])
 
-		res.Events = append(res.Events, CalTermEvent{
-			Name:      name,
-			StartDate: startDate,
-			EndDate:   endDate,
-		})
+			res.Events = append(res.Events, CalTermEvent{
+				Name:      name,
+				StartDate: startDate,
+				EndDate:   endDate,
+			})
+		} else {
+			// 远古学期的数据格式可能不统一，不做处理
+			res.Events = append(res.Events, CalTermEvent{
+				Name: rawData[0],
+			})
+		}
 	}
 
 	return res, nil
