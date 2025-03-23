@@ -90,12 +90,14 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 		}
 
 		// 解析调课信息
+		// 第二个理论上来说是一个不标准的调课信息，但是不知道为什么被录入了教务系统导致炸掉，所以修改了一下解析的正则表达式来做了兼容。 -- @renbaoshuo
 		/*
 			06周 星期3:5-6节  调至  09周 星期1:7-8节  旗山西1-206
+			4 周 星期2:3-4节  调至  05周 星期2:7-8节  旗山东3-101
 		*/
 		courseInfo11 := strings.Split(utils.InnerTextWithBr(info[11]), "\n")
 		// 注意：下面的正则里面有 NO-BREAK SPACE (U+00A0 %C2%A0)
-		adjustRegex := regexp.MustCompile(`(\d{2})周 星期(\d):(\d{1,2})-(\d{1,2})节[\s ]*调至[\s ]*(\d{2})周 星期(\d):(\d{1,2})-(\d{1,2})节[\s ]*(\S*)`)
+		adjustRegex := regexp.MustCompile(`(\d{1,2})[\s ]*周[\s ]*星期(\d):(\d{1,2})-(\d{1,2})节[\s ]*调至[\s ]*(\d{1,2})[\s ]*周[\s ]*星期(\d):(\d{1,2})-(\d{1,2})节[\s ]*(\S*)`)
 		adjustRules := []CourseAdjustRule{}
 
 		for i := 0; i < len(courseInfo11); i++ {
