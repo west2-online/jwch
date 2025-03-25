@@ -1,6 +1,6 @@
 module github.com/west2-online/jwch
 
-go 1.23.0
+go 1.23.4
 
 require (
 	github.com/antchfx/htmlquery v1.3.3
