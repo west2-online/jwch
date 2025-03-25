@@ -1,6 +1,7 @@
 module github.com/west2-online/jwch
 
 go 1.23.0
+
 require (
 	github.com/antchfx/htmlquery v1.3.3
 	github.com/go-resty/resty/v2 v2.15.3
