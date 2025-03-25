@@ -66,17 +66,19 @@ type Course struct {
 	Syllabus   string `json:"syllabus"`   // 课程大纲
 	LessonPlan string `json:"lessonplan"` // 课程计划
 	// PaymentStatus string `json:"paymentstatus"` // 缴费状态
-	Credits          string               `json:"credit"`           // 学分
-	ElectiveType     string               `json:"electivetype"`     // 选课类型
-	ExamType         string               `json:"examtype"`         // 考试类别
-	Teacher          string               `json:"teacher"`          // 任课教师
-	ScheduleRules    []CourseScheduleRule `json:"scheduleRules"`    // 上课时间地点规则
-	RawScheduleRules string               `json:"rawScheduleRules"` // 上课时间地点（原始文本）
-	RawExamTime      string               `json:"rawExamTime"`      // 考试时间地点（原始文本）
-	RawAdjust        string               `json:"rawAdjust"`        // 调课信息（原始文本）
-	Remark           string               `json:"remark"`           // 备注
+	Credits               string                       `json:"credit"`                // 学分
+	ElectiveType          string                       `json:"electivetype"`          // 选课类型
+	ExamType              string                       `json:"examtype"`              // 考试类别
+	Teacher               string                       `json:"teacher"`               // 任课教师
+	ScheduleRules         []CourseScheduleRule         `json:"scheduleRules"`         // 上课时间地点规则
+	FullWeekScheduleRules []CourseFullWeekScheduleRule `json:"fullWeekScheduleRules"` // 整周课程上课时间地点规则
+	RawScheduleRules      string                       `json:"rawScheduleRules"`      // 上课时间地点（原始文本）
+	RawExamTime           string                       `json:"rawExamTime"`           // 考试时间地点（原始文本）
+	RawAdjust             string                       `json:"rawAdjust"`             // 调课信息（原始文本）
+	Remark                string                       `json:"remark"`                // 备注
 }
 
+// 周内课程的上课时间地点规则
 type CourseScheduleRule struct {
 	Location     string `json:"location"`     // 上课地点
 	StartClass   int    `json:"startClass"`   // 开始节数
@@ -90,6 +92,15 @@ type CourseScheduleRule struct {
 	FromFullWeek bool   `json:"fromFullWeek"` // 是否来自整周课程
 }
 
+// 整周课程的上课时间地点规则
+type CourseFullWeekScheduleRule struct {
+	StartWeek    int `json:"startWeek"`    // 开始周
+	StartWeekDay int `json:"startWeekDay"` // 开始周在星期几
+	EndWeek      int `json:"endWeek"`      // 结束周
+	EndWeekDay   int `json:"endWeekDay"`   // 结束周在星期几
+}
+
+// 调课规则
 type CourseAdjustRule struct {
 	OldWeek       int `json:"oldWeek"`       // 原-周次
 	OldWeekday    int `json:"oldWeekday"`    // 原-星期几

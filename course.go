@@ -135,6 +135,7 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 		*/
 		courseInfo8 := strings.Split(utils.InnerTextWithBr(info[8]), "\n")
 		scheduleRules := []CourseScheduleRule{}
+		fullWeekScheduleRules := []CourseFullWeekScheduleRule{}
 
 		for i := 0; i < len(courseInfo8); i++ {
 			courseInfo8[i] = strings.TrimSpace(courseInfo8[i])
@@ -163,6 +164,7 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 				startWeekday, _ := strconv.Atoi(strings.TrimPrefix(lineData[1], "星期"))
 				endWeekday, _ := strconv.Atoi(strings.TrimPrefix(lineData[4], "星期"))
 
+				// 向普通课程的格式转换（应用于课表显示）
 				for weekday := 1; weekday <= 7; weekday++ {
 					curStartWeek := startWeek
 					curEndWeek := endWeek
@@ -193,123 +195,53 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 					})
 				}
 
-				continue
-			}
-
-			/*
-				08-16 星期5:7-8节 铜盘A508
-				[0] 08-16
-				[1] 星期5:7-8节
-				[2] 铜盘A508
-			*/
-			/*
-				02-14 星期1:1-2节(双) 旗山西1-206
-				[0] 02-14
-				[1] 星期1:1-2节(双)
-				[2] 旗山西1-206
-			*/
-			/*
-				01-13 星期1:3-4节(单) 旗山西1-206
-				[0] 01-13
-				[1] 星期1:3-4节(单)
-				[2] 旗山西1-206
-			*/
-
-			// 是不是用正则表达式更好一点？
-			weekInfo := strings.SplitN(lineData[0], "-", 2)    // [8, 16]
-			dayInfo := strings.SplitN(lineData[1], ":", 2)     // ["星期5", "7-8节"] or ["星期1", "1-2节(双)"]
-			classBasicInfo := strings.Split(dayInfo[1], "节")   // ["7-8", ""] or ["1-2", "(双)"]
-			classInfo := strings.Split(classBasicInfo[0], "-") // ["7", "8"]
-			location := lineData[2]
-			startClass := utils.SafeAtoi(classInfo[0])
-			endClass := utils.SafeAtoi(classInfo[1])
-			startWeek := utils.SafeAtoi(weekInfo[0])
-			endWeek := utils.SafeAtoi(weekInfo[1])
-			weekDay := utils.SafeAtoi(strings.TrimPrefix(dayInfo[0], "星期"))
-			single := !strings.Contains(classBasicInfo[1], "双")
-			double := !strings.Contains(classBasicInfo[1], "单")
-
-			if len(adjustRules) == 0 {
-				scheduleRules = append(scheduleRules, CourseScheduleRule{
-					Location:     location,
-					StartClass:   startClass,
-					EndClass:     endClass,
+				// 记录整周课程的信息（应用于日历生成）
+				fullWeekScheduleRules = append(fullWeekScheduleRules, CourseFullWeekScheduleRule{
 					StartWeek:    startWeek,
+					StartWeekDay: startWeekday,
 					EndWeek:      endWeek,
-					Weekday:      weekDay,
-					Single:       single,
-					Double:       double,
-					Adjust:       false,
-					FromFullWeek: false,
+					EndWeekDay:   endWeekday,
 				})
-			} else {
-				startWeek := utils.SafeAtoi(weekInfo[0])
-				endWeek := utils.SafeAtoi(weekInfo[1])
+			} else { // 处理周内的正常课程
+				/*
+					08-16 星期5:7-8节 铜盘A508
+					[0] 08-16
+					[1] 星期5:7-8节
+					[2] 铜盘A508
+				*/
+				/*
+					02-14 星期1:1-2节(双) 旗山西1-206
+					[0] 02-14
+					[1] 星期1:1-2节(双)
+					[2] 旗山西1-206
+				*/
+				/*
+					01-13 星期1:3-4节(单) 旗山西1-206
+					[0] 01-13
+					[1] 星期1:3-4节(单)
+					[2] 旗山西1-206
+				*/
+
+				// 是不是用正则表达式更好一点？
+				weekInfo := strings.SplitN(lineData[0], "-", 2)    // [8, 16]
+				dayInfo := strings.SplitN(lineData[1], ":", 2)     // ["星期5", "7-8节"] or ["星期1", "1-2节(双)"]
+				classBasicInfo := strings.Split(dayInfo[1], "节")   // ["7-8", ""] or ["1-2", "(双)"]
+				classInfo := strings.Split(classBasicInfo[0], "-") // ["7", "8"]
+				location := lineData[2]
 				startClass := utils.SafeAtoi(classInfo[0])
 				endClass := utils.SafeAtoi(classInfo[1])
-				removedWeeks := []int{}
+				startWeek := utils.SafeAtoi(weekInfo[0])
+				endWeek := utils.SafeAtoi(weekInfo[1])
+				weekDay := utils.SafeAtoi(strings.TrimPrefix(dayInfo[0], "星期"))
+				single := !strings.Contains(classBasicInfo[1], "双")
+				double := !strings.Contains(classBasicInfo[1], "单")
 
-				for _, adjustRule := range adjustRules {
-					// 匹配是否是对应的调课信息
-					if adjustRule.OldWeek < startWeek ||
-						adjustRule.OldWeek > endWeek ||
-						adjustRule.OldStartClass != startClass ||
-						adjustRule.OldEndClass != endClass ||
-						adjustRule.OldWeekday != weekDay {
-						continue
-					}
-
-					// 记录被去掉的周次
-					removedWeeks = append(removedWeeks, adjustRule.OldWeek)
-
-					// 添加新的课程信息
-					scheduleRules = append(scheduleRules, CourseScheduleRule{
-						Location:     adjustRule.NewLocation,
-						StartClass:   adjustRule.NewStartClass,
-						EndClass:     adjustRule.NewEndClass,
-						StartWeek:    adjustRule.NewWeek,
-						EndWeek:      adjustRule.NewWeek,
-						Weekday:      adjustRule.NewWeekday,
-						Single:       true,
-						Double:       true,
-						Adjust:       true, // 调课
-						FromFullWeek: false,
-					})
-				}
-
-				sort.Ints(removedWeeks)
-				// 去掉被调课的周次
-				curStartWeek := startWeek
-
-				for _, removedWeek := range removedWeeks {
-					if removedWeek == curStartWeek {
-						curStartWeek++
-
-						continue
-					}
-
+				if len(adjustRules) == 0 {
 					scheduleRules = append(scheduleRules, CourseScheduleRule{
 						Location:     location,
 						StartClass:   startClass,
 						EndClass:     endClass,
-						StartWeek:    curStartWeek,
-						EndWeek:      removedWeek - 1,
-						Weekday:      weekDay,
-						Single:       single,
-						Double:       double,
-						Adjust:       false,
-						FromFullWeek: false,
-					})
-
-					curStartWeek = removedWeek + 1
-				}
-
-				if curStartWeek <= endWeek {
-					scheduleRules = append(scheduleRules, CourseScheduleRule{
-						Location:     location,
-						StartClass:   startClass,
-						EndClass:     endClass,
-						StartWeek:    curStartWeek,
+						StartWeek:    startWeek,
 						EndWeek:      endWeek,
 						Weekday:      weekDay,
 						Single:       single,
@@ -317,6 +249,82 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 						Adjust:       false,
 						FromFullWeek: false,
 					})
+				} else {
+					startWeek := utils.SafeAtoi(weekInfo[0])
+					endWeek := utils.SafeAtoi(weekInfo[1])
+					startClass := utils.SafeAtoi(classInfo[0])
+					endClass := utils.SafeAtoi(classInfo[1])
+					removedWeeks := []int{}
+
+					for _, adjustRule := range adjustRules {
+						// 匹配是否是对应的调课信息
+						if adjustRule.OldWeek < startWeek ||
+							adjustRule.OldWeek > endWeek ||
+							adjustRule.OldStartClass != startClass ||
+							adjustRule.OldEndClass != endClass ||
+							adjustRule.OldWeekday != weekDay {
+							continue
+						}
+
+						// 记录被去掉的周次
+						removedWeeks = append(removedWeeks, adjustRule.OldWeek)
+
+						// 添加新的课程信息
+						scheduleRules = append(scheduleRules, CourseScheduleRule{
+							Location:     adjustRule.NewLocation,
+							StartClass:   adjustRule.NewStartClass,
+							EndClass:     adjustRule.NewEndClass,
+							StartWeek:    adjustRule.NewWeek,
+							EndWeek:      adjustRule.NewWeek,
+							Weekday:      adjustRule.NewWeekday,
+							Single:       true,
+							Double:       true,
+							Adjust:       true, // 调课
+							FromFullWeek: false,
+						})
+					}
+
+					sort.Ints(removedWeeks)
+					// 去掉被调课的周次
+					curStartWeek := startWeek
+
+					for _, removedWeek := range removedWeeks {
+						if removedWeek == curStartWeek {
+							curStartWeek++
+
+							continue
+						}
+
+						scheduleRules = append(scheduleRules, CourseScheduleRule{
+							Location:     location,
+							StartClass:   startClass,
+							EndClass:     endClass,
+							StartWeek:    curStartWeek,
+							EndWeek:      removedWeek - 1,
+							Weekday:      weekDay,
+							Single:       single,
+							Double:       double,
+							Adjust:       false,
+							FromFullWeek: false,
+						})
+
+						curStartWeek = removedWeek + 1
+					}
+
+					if curStartWeek <= endWeek {
+						scheduleRules = append(scheduleRules, CourseScheduleRule{
+							Location:     location,
+							StartClass:   startClass,
+							EndClass:     endClass,
+							StartWeek:    curStartWeek,
+							EndWeek:      endWeek,
+							Weekday:      weekDay,
+							Single:       single,
+							Double:       double,
+							Adjust:       false,
+							FromFullWeek: false,
+						})
+					}
 				}
 			}
 		}
@@ -328,15 +336,16 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 			Syllabus:   constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 0)),
 			LessonPlan: constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 1)),
 			// PaymentStatus: safeExtractionFirst(info[3], "font"),
-			Credits:          safeExtractionFirst(info[4], "span"),
-			ElectiveType:     utils.GetChineseCharacter(htmlquery.OutputHTML(info[5], false)),
-			ExamType:         utils.GetChineseCharacter(htmlquery.OutputHTML(info[6], false)),
-			Teacher:          htmlquery.OutputHTML(info[7], false),
-			ScheduleRules:    scheduleRules,
-			RawScheduleRules: strings.Join(courseInfo8, "\n"),
-			RawExamTime:      strings.TrimSpace(htmlquery.InnerText(info[9])),
-			RawAdjust:        strings.Join(courseInfo11, "\n"),
-			Remark:           htmlquery.OutputHTML(info[10], false),
+			Credits:               safeExtractionFirst(info[4], "span"),
+			ElectiveType:          utils.GetChineseCharacter(htmlquery.OutputHTML(info[5], false)),
+			ExamType:              utils.GetChineseCharacter(htmlquery.OutputHTML(info[6], false)),
+			Teacher:               htmlquery.OutputHTML(info[7], false),
+			ScheduleRules:         scheduleRules,
+			FullWeekScheduleRules: fullWeekScheduleRules,
+			RawScheduleRules:      strings.Join(courseInfo8, "\n"),
+			RawExamTime:           strings.TrimSpace(htmlquery.InnerText(info[9])),
+			RawAdjust:             strings.Join(courseInfo11, "\n"),
+			Remark:                htmlquery.OutputHTML(info[10], false),
 		})
 	}
 
