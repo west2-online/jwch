@@ -28,5 +28,6 @@ const (
 	AuthorizationFailedErrCode = 10004 // 鉴权失败
 	UnexpectedTypeErrorCode    = 10005 // 未知类型
 	NotImplementErrorCode      = 10006 // 未实装
+	NeedEvaluationErrorCode    = 10007 // 需要测评
 
 )

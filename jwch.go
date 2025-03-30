@@ -87,6 +87,9 @@ func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 	if strings.Contains(string(resp.Body()), "重新登录") {
 		return nil, errno.CookieError
 	}
+	if strings.Contains(string(resp.Body()), "进行测评") {
+		return nil, errno.EvaluationNotFoundError
+	}
 
 	return htmlquery.Parse(bytes.NewReader(resp.Body()))
 }
@@ -104,6 +107,9 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 	// id 或 cookie 缺失或者解析错误 TODO: 判断条件有点简陋
 	if strings.Contains(string(resp.Body()), "处理URL失败") {
 		return nil, errno.CookieError
+	}
+	if strings.Contains(string(resp.Body()), "进行测评") {
+		return nil, errno.EvaluationNotFoundError
 	}
 	return htmlquery.Parse(strings.NewReader(strings.TrimSpace(string(resp.Body()))))
 }

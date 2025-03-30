@@ -26,10 +26,11 @@ var (
 	AuthorizationFailedError = NewErrNo(AuthorizationFailedErrCode, "authorization failed")
 
 	// User
-	AccountConflictError  = NewErrNo(AuthorizationFailedErrCode, "account conflict")
-	CookieError           = NewErrNo(AuthorizationFailedErrCode, "id error or session expired")
-	LoginCheckFailedError = NewErrNo(AuthorizationFailedErrCode, "login check failed")
-	SSOLoginFailedError   = NewErrNo(AuthorizationFailedErrCode, "sso login failed")
+	AccountConflictError    = NewErrNo(AuthorizationFailedErrCode, "account conflict")
+	CookieError             = NewErrNo(AuthorizationFailedErrCode, "id error or session expired")
+	LoginCheckFailedError   = NewErrNo(AuthorizationFailedErrCode, "login check failed")
+	SSOLoginFailedError     = NewErrNo(AuthorizationFailedErrCode, "sso login failed")
+	EvaluationNotFoundError = NewErrNo(NeedEvaluationErrorCode, "evaluation not found")
 
 	// HTTP
 	HTTPQueryError = NewErrNo(HTTPQueryErrorCode, "HTTP query failed")
