@@ -33,6 +33,7 @@ const (
 	JwchNoticeURLPrefix = "https://jwch.fzu.edu.cn/"
 	CultivatePlanURL    = "https://jwcjwxt2.fzu.edu.cn:81/pyfa/pyjh/pyjh_list.aspx"
 	JwchLocateDateUrl   = "https://jwcjwxt2.fzu.edu.cn:82/week.asp"
+	JwchPingYiUrl       = "student/jscp/TeaList.aspx"
 
 	JwchPrefix  = "https://jwcjwxt2.fzu.edu.cn:81"
 	JwchReferer = "https://jwcjwxt2.fzu.edu.cn:82/"
