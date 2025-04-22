@@ -48,8 +48,8 @@ func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
 	list := htmlquery.Find(resp, `//select[@name="xq"]/option/@value`)
 
 	for _, node := range list {
-		// 只取前6个年份
-		if len(res.Terms) >= 6 {
+		// 需要取前16个年份
+		if len(res.Terms) >= 16 {
 			break
 		}
 		rawTerm := htmlquery.SelectAttr(node, "value")
