@@ -131,7 +131,6 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 			if strings.Contains(string(respRedirected.Body()), "请先对任课教师进行测评") {
 				return nil, errno.EvaluationNotFoundError
 			}
-
 		}
 		return nil, errno.CookieError.WithErr(err)
 	}
