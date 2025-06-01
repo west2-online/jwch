@@ -80,6 +80,22 @@ func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 	resp, err := s.NewRequest().SetHeader("Referer", constants.JwchReferer).SetQueryParam("id", s.Identifier).Get(url)
 	// 会话过期：会直接重定向，但我们禁用了重定向，所以会有error
 	if err != nil {
+		// 由于评议在重定向后的页面上，所以我们需要处理重定向
+		if resp != nil && resp.StatusCode() == 302 {
+			redirectURL := resp.Header().Get("Location")
+			// 再次访问重定向后的URL(带prefix)
+			respRedirected, errRedirected := s.NewRequest().
+				SetHeader("Referer", constants.JwchReferer).
+				SetQueryParam("id", s.Identifier).
+				Get(constants.JwchPrefix + redirectURL)
+
+			if errRedirected != nil {
+				return nil, errno.CookieError
+			}
+			if strings.Contains(string(respRedirected.Body()), "请先对任课教师进行测评") {
+				return nil, errno.EvaluationNotFoundError
+			}
+		}
 		return nil, errno.CookieError
 	}
 
@@ -101,6 +117,23 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 	s.NewRequest().EnableTrace()
 	// 会话过期：会直接重定向，但我们禁用了重定向，所以会有error
 	if err != nil {
+		// 由于评议在重定向后的页面上，所以我们需要处理重定向
+		if resp != nil && resp.StatusCode() == 302 {
+			redirectURL := resp.Header().Get("Location")
+			// 再次访问重定向后的URL(带prefix)
+			respRedirected, errRedirected := s.NewRequest().
+				SetHeader("Referer", constants.JwchReferer).
+				SetQueryParam("id", s.Identifier).
+				// 这里不确定应该Get还是Post，但目前Post Method没有会被评议卡的
+				Get(constants.JwchPrefix + redirectURL)
+
+			if errRedirected != nil {
+				return nil, errno.CookieError
+			}
+			if strings.Contains(string(respRedirected.Body()), "请先对任课教师进行测评") {
+				return nil, errno.EvaluationNotFoundError
+			}
+		}
 		return nil, errno.CookieError.WithErr(err)
 	}
 
