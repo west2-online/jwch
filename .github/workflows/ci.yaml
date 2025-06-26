@@ -16,7 +16,7 @@ permissions:
 jobs:
   fmt:
     name: Format
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -36,7 +36,7 @@ jobs:
 
   vet:
     name: Vet
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -65,7 +65,7 @@ jobs:
 
   license:
     name: License
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Check license header
