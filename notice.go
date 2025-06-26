@@ -18,6 +18,7 @@ package jwch
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
@@ -93,6 +94,8 @@ func parseNoticeInfo(doc *html.Node) ([]*NoticeInfo, error) {
 		url := strings.TrimSpace(htmlquery.SelectAttr(titleNode, "href"))
 		url = constants.JwchNoticeURLPrefix + url
 
+		url = convertURL(url)
+
 		noticeInfo := &NoticeInfo{
 			Title: title,
 			URL:   url,
@@ -118,4 +121,28 @@ func getTotalPages(doc *html.Node) (int, error) {
 		return 0, fmt.Errorf("解析总页数失败: %v", err)
 	}
 	return totalPages, nil
+}
+
+// 转换函数
+/*
+将
+https://jwch.fzu.edu.cn/../info/1040/13769.htm
+https://jwch.fzu.edu.cn/info/1038/14038.htm
+改成
+https://jwch.fzu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1040&wbnewsid=13768
+*/
+func convertURL(original string) string {
+	// 正则提取 wbtreeid 和 wbnewsid
+	re := regexp.MustCompile(`info/(\d+)/(\d+)\.htm`)
+	matches := re.FindStringSubmatch(original)
+	if len(matches) != 3 {
+		return original
+	}
+
+	wbtreeid := matches[1]
+	wbnewsid := matches[2]
+
+	// 构造新的 URL
+	newURL := fmt.Sprintf("https://jwch.fzu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=%s&wbnewsid=%s", wbtreeid, wbnewsid)
+	return newURL
 }
