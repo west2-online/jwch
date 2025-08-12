@@ -31,6 +31,7 @@ var (
 	LoginCheckFailedError   = NewErrNo(AuthorizationFailedErrCode, "login check failed")
 	SSOLoginFailedError     = NewErrNo(AuthorizationFailedErrCode, "sso login failed")
 	EvaluationNotFoundError = NewErrNo(NeedEvaluationErrorCode, "evaluation not found")
+	JwchNetworkError        = NewErrNo(JwchNetworkErrorCode, "jwch network error")
 
 	// HTTP
 	HTTPQueryError = NewErrNo(HTTPQueryErrorCode, "HTTP query failed")

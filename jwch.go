@@ -128,13 +128,13 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 				Get(constants.JwchPrefix + redirectURL)
 
 			if errRedirected != nil {
-				return nil, errno.CookieError
+				return nil, errno.JwchNetworkError.WithErr(err)
 			}
 			if strings.Contains(string(respRedirected.Body()), "请先对任课教师进行测评") {
 				return nil, errno.EvaluationNotFoundError
 			}
 		}
-		return nil, errno.CookieError.WithErr(err)
+		return nil, errno.JwchNetworkError.WithErr(err)
 	}
 
 	// id 或 cookie 缺失或者解析错误 TODO: 判断条件有点简陋

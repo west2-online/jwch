@@ -29,5 +29,5 @@ const (
 	UnexpectedTypeErrorCode    = 10005 // 未知类型
 	NotImplementErrorCode      = 10006 // 未实装
 	NeedEvaluationErrorCode    = 10007 // 需要测评
-
+	JwchNetworkErrorCode       = 10008 // 教务处网络异常
 )
