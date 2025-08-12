@@ -128,15 +128,19 @@ func getTotalPages(doc *html.Node) (int, error) {
 将
 https://jwch.fzu.edu.cn/../info/1040/13769.htm
 https://jwch.fzu.edu.cn/info/1038/14038.htm
+https://jwch.fzu.edu.cn/../content.jsp?urltype=news.NewsContentUrl&wbtreeid=1039&wbnewsid=14075
 改成
 https://jwch.fzu.edu.cn/content.jsp?urltype=news.NewsContentUrl&wbtreeid=1040&wbnewsid=13768
 */
 func convertURL(original string) string {
+	// 去除 "../"
+	cleaned := strings.ReplaceAll(original, "../", "")
+
 	// 正则提取 wbtreeid 和 wbnewsid
 	re := regexp.MustCompile(`info/(\d+)/(\d+)\.htm`)
-	matches := re.FindStringSubmatch(original)
+	matches := re.FindStringSubmatch(cleaned)
 	if len(matches) != 3 {
-		return original
+		return cleaned
 	}
 
 	wbtreeid := matches[1]
