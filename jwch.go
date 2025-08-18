@@ -53,7 +53,9 @@ func NewStudent() *Student {
 		}
 	}
 
-	client := resty.New().SetTransport(transport).SetRedirectPolicy(resty.NoRedirectPolicy())
+	client := resty.New().
+		SetTransport(transport).
+		SetRedirectPolicy(resty.NoRedirectPolicy())
 
 	return &Student{
 		client: client,

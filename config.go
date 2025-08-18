@@ -60,8 +60,8 @@ func (c *Config) GetTunnelAddress() (string, error) {
 
 	// 构建请求参数
 	params := url.Values{}
-	params.Set("auth_key", c.Proxy.AuthKey)
-	params.Set("auth_pwd", c.Proxy.AuthPwd)
+	params.Set("key", c.Proxy.AuthKey)
+	params.Set("pwd", c.Proxy.AuthPwd)
 
 	// 发送GET请求
 	resp, err := client.Get(c.Proxy.TunnelURL + "?" + params.Encode())
@@ -92,7 +92,6 @@ func (c *Config) GetTunnelAddress() (string, error) {
 
 	// 更新配置中的代理服务器地址
 	c.Proxy.ProxyServer = tunnelServer
-
 	return tunnelServer, nil
 }
 
