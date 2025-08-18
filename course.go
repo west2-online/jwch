@@ -17,7 +17,6 @@ limitations under the License.
 package jwch
 
 import (
-	_ "io/ioutil"
 	"regexp"
 	"sort"
 	"strconv"

@@ -216,3 +216,31 @@ type LocateDate struct {
 	Year string
 	Term string
 }
+
+// ProxyConfig 青果网络代理配置
+type ProxyConfig struct {
+	AuthKey     string `json:"auth_key"`     // 青果网络认证密钥
+	AuthPwd     string `json:"auth_pwd"`     // 青果网络认证密码
+	TunnelURL   string `json:"tunnel_url"`   // 隧道地址获取接口
+	ProxyServer string `json:"proxy_server"` // 代理服务器地址 (从隧道接口获取)
+	Enabled     bool   `json:"enabled"`      // 是否启用代理
+}
+
+// Config 应用配置
+type Config struct {
+	Proxy ProxyConfig `json:"proxy"` // 代理配置
+}
+
+// TunnelData 隧道数据
+type TunnelData struct {
+	Server   string `json:"server"`   // 代理服务器地址，格式: host:port
+	Area     string `json:"area"`     // 区域代码
+	Distinct bool   `json:"distinct"` // 是否独享
+}
+
+// TunnelResponse 隧道地址响应
+type TunnelResponse struct {
+	Code      string       `json:"code"`       // 响应码，"SUCCESS"表示成功
+	Data      []TunnelData `json:"data"`       // 隧道数据数组
+	RequestId string       `json:"request_id"` // 请求ID
+}

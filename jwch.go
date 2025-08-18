@@ -32,12 +32,28 @@ import (
 )
 
 func NewStudent() *Student {
+	// 从环境变量加载配置
+	config := LoadConfigFromEnv()
+
 	// Disable HTTP/2.0
 	// Disable Redirect
-	client := resty.New().SetTransport(&http.Transport{
+	transport := &http.Transport{
 		TLSNextProto:    make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}).SetRedirectPolicy(resty.NoRedirectPolicy())
+	}
+
+	// 如果启用了代理，先获取隧道地址再设置代理
+	if config.Proxy.Enabled {
+		_, err := config.GetTunnelAddress()
+		if err == nil && config.Proxy.ProxyServer != "" {
+			proxyURL, err := config.GetProxyURL()
+			if err == nil {
+				transport.Proxy = http.ProxyURL(proxyURL)
+			}
+		}
+	}
+
+	client := resty.New().SetTransport(transport).SetRedirectPolicy(resty.NoRedirectPolicy())
 
 	return &Student{
 		client: client,

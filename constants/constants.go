@@ -40,6 +40,9 @@ const (
 	JwchOrigin  = "https://jwcjwxt2.fzu.edu.cn:82/"
 
 	AutoCaptchaVerifyURL = "https://statistics.fzuhelper.w2fzu.com/api/login/validateCode?validateCode"
+
+	// 青果网络代理相关常量
+	QingGuoTunnelURL = "https://share.proxy.qg.net/get" // 青果网络隧道地址获取接口
 )
 
 var BuildingArray = []string{"公共教学楼东1", "公共教学楼东2", "公共教学楼东3", "公共教学楼文科楼", "公共教学楼西1", "公共教学楼西2", "公共教学楼西3", "公共教学楼中楼"}
