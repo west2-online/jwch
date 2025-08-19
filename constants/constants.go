@@ -42,7 +42,8 @@ const (
 	AutoCaptchaVerifyURL = "https://statistics.fzuhelper.w2fzu.com/api/login/validateCode?validateCode"
 
 	// 青果网络代理相关常量
-	QingGuoTunnelURL = "https://share.proxy.qg.net/pool" // 青果网络隧道地址获取接口
+	QingGuoExclusiveGetURL   = "https://exclusive.proxy.qg.net/get"   // 青果网络独享代理提取接口
+	QingGuoExclusiveQueryURL = "https://exclusive.proxy.qg.net/query" // 青果网络独享代理查询接口
 )
 
 var BuildingArray = []string{"公共教学楼东1", "公共教学楼东2", "公共教学楼东3", "公共教学楼文科楼", "公共教学楼西1", "公共教学楼西2", "公共教学楼西3", "公共教学楼中楼"}

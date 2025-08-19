@@ -31,8 +31,7 @@ import (
 func LoadConfigFromEnv() *Config {
 	config := &Config{
 		Proxy: ProxyConfig{
-			TunnelURL: constants.QingGuoTunnelURL,
-			Enabled:   false,
+			Enabled: false,
 		},
 	}
 
@@ -50,52 +49,93 @@ func LoadConfigFromEnv() *Config {
 	return config
 }
 
-// GetTunnelAddress 获取青果网络隧道地址
-func (c *Config) GetTunnelAddress() (string, error) {
+// GetProxyAddress 获取青果网络独享代理地址
+func (c *Config) GetProxyAddress() (string, error) {
 	if !c.Proxy.Enabled || c.Proxy.AuthKey == "" || c.Proxy.AuthPwd == "" {
 		return "", fmt.Errorf("代理未启用或认证信息不完整")
 	}
 
 	client := &http.Client{}
 
-	// 构建请求参数
+	// 首先尝试查询现有的代理
+	server, err := c.queryExistingProxy(client)
+	if err == nil && server != "" {
+		c.Proxy.ProxyServer = server
+		return server, nil
+	}
+
+	// 如果没有现有代理或查询失败，尝试获取新的代理
+	return c.getNewProxy(client)
+}
+
+// queryExistingProxy 查询现有的代理
+func (c *Config) queryExistingProxy(client *http.Client) (string, error) {
 	params := url.Values{}
 	params.Set("key", c.Proxy.AuthKey)
 	params.Set("pwd", c.Proxy.AuthPwd)
 
-	// 发送GET请求
-	resp, err := client.Get(c.Proxy.TunnelURL + "?" + params.Encode())
+	resp, err := client.Get(constants.QingGuoExclusiveQueryURL + "?" + params.Encode())
 	if err != nil {
-		return "", errno.HTTPQueryError.WithMessage("获取隧道地址失败").WithErr(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
-	var tunnelResp TunnelResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tunnelResp); err != nil {
-		return "", errno.HTTPQueryError.WithMessage("解析隧道地址响应失败").WithErr(err)
+	var queryResp ExclusiveProxyQueryResponse
+	if err := json.NewDecoder(resp.Body).Decode(&queryResp); err != nil {
+		return "", err
 	}
 
-	if tunnelResp.Code != "SUCCESS" {
-		return "", fmt.Errorf("获取隧道地址失败，响应码: %s", tunnelResp.Code)
+	if queryResp.Code != "SUCCESS" || queryResp.Data == nil || len(queryResp.Data.Tasks) == 0 {
+		return "", fmt.Errorf("没有现有的代理")
 	}
 
-	// 检查是否有可用的隧道数据
-	if len(tunnelResp.Data) == 0 {
-		return "", fmt.Errorf("没有可用的隧道地址")
+	// 使用第一个任务的第一个IP
+	task := queryResp.Data.Tasks[0]
+	if len(task.IPs) == 0 {
+		return "", fmt.Errorf("任务中没有可用的IP")
 	}
 
-	// 使用第一个可用的隧道地址
-	tunnelServer := tunnelResp.Data[0].Server
-	if tunnelServer == "" {
-		return "", fmt.Errorf("隧道地址为空")
+	return task.IPs[0].Server, nil
+}
+
+// getNewProxy 获取新的代理
+func (c *Config) getNewProxy(client *http.Client) (string, error) {
+	params := url.Values{}
+	params.Set("key", c.Proxy.AuthKey)
+	params.Set("pwd", c.Proxy.AuthPwd)
+
+	resp, err := client.Get(constants.QingGuoExclusiveGetURL + "?" + params.Encode())
+	if err != nil {
+		return "", errno.HTTPQueryError.WithMessage("获取代理地址失败").WithErr(err)
+	}
+	defer resp.Body.Close()
+
+	var getResp ExclusiveProxyGetResponse
+	if err := json.NewDecoder(resp.Body).Decode(&getResp); err != nil {
+		return "", errno.HTTPQueryError.WithMessage("解析代理地址响应失败").WithErr(err)
+	}
+
+	if getResp.Code != "SUCCESS" {
+		return "", fmt.Errorf("获取代理地址失败，响应码: %s, 消息: %s", getResp.Code, getResp.Message)
+	}
+
+	// 检查是否有可用的数据
+	if getResp.Data == nil || len(getResp.Data.IPs) == 0 {
+		return "", fmt.Errorf("没有可用的代理地址")
+	}
+
+	// 使用第一个可用的代理地址
+	proxyServer := getResp.Data.IPs[0].Server
+	if proxyServer == "" {
+		return "", fmt.Errorf("代理地址为空")
 	}
 
 	// 更新配置中的代理服务器地址
-	c.Proxy.ProxyServer = tunnelServer
-	return tunnelServer, nil
+	c.Proxy.ProxyServer = proxyServer
+	return proxyServer, nil
 }
 
-// GetProxyURL 根据青果网络文档生成代理URL
+// GetProxyURL 根据青果网络独享代理文档生成代理URL
 func (c *Config) GetProxyURL() (*url.URL, error) {
 	if !c.Proxy.Enabled {
 		return nil, fmt.Errorf("代理未启用")
@@ -105,7 +145,7 @@ func (c *Config) GetProxyURL() (*url.URL, error) {
 		return nil, fmt.Errorf("代理配置信息不完整")
 	}
 
-	// 普通模式：每次请求都自动切换IP
+	// 独享代理模式：使用key作为用户名，pwd作为密码
 	link := fmt.Sprintf("http://%s:%s@%s", c.Proxy.AuthKey, c.Proxy.AuthPwd, c.Proxy.ProxyServer)
 	return url.Parse(link)
 }

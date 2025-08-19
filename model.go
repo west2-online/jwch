@@ -221,8 +221,7 @@ type LocateDate struct {
 type ProxyConfig struct {
 	AuthKey     string `json:"auth_key"`     // 青果网络认证密钥
 	AuthPwd     string `json:"auth_pwd"`     // 青果网络认证密码
-	TunnelURL   string `json:"tunnel_url"`   // 隧道地址获取接口
-	ProxyServer string `json:"proxy_server"` // 代理服务器地址 (从隧道接口获取)
+	ProxyServer string `json:"proxy_server"` // 代理服务器地址 (从代理接口获取)
 	Enabled     bool   `json:"enabled"`      // 是否启用代理
 }
 
@@ -231,16 +230,41 @@ type Config struct {
 	Proxy ProxyConfig `json:"proxy"` // 代理配置
 }
 
-// TunnelData 隧道数据
-type TunnelData struct {
-	Server   string `json:"server"`   // 代理服务器地址，格式: host:port
-	Area     string `json:"area"`     // 区域代码
-	Distinct bool   `json:"distinct"` // 是否独享
+// ExclusiveProxyIP 独享代理IP信息
+type ExclusiveProxyIP struct {
+	ProxyIP  string `json:"proxy_ip"`  // 代理IP地址
+	Server   string `json:"server"`    // 代理服务器地址，格式: host:port
+	AreaCode int    `json:"area_code"` // 区域代码
+	Area     string `json:"area"`      // 区域名称
+	ISP      string `json:"isp"`       // 运营商
+	Deadline string `json:"deadline"`  // 过期时间
 }
 
-// TunnelResponse 隧道地址响应
-type TunnelResponse struct {
-	Code      string       `json:"code"`       // 响应码，"SUCCESS"表示成功
-	Data      []TunnelData `json:"data"`       // 隧道数据数组
-	RequestId string       `json:"request_id"` // 请求ID
+// ExclusiveProxyTask 独享代理任务
+type ExclusiveProxyTask struct {
+	TaskID string             `json:"task_id"` // 任务ID
+	IPs    []ExclusiveProxyIP `json:"ips"`     // IP列表
+	Num    int                `json:"num"`     // IP数量
+}
+
+// ExclusiveProxyGetResponse 独享代理提取响应
+type ExclusiveProxyGetResponse struct {
+	Code string `json:"code"` // 响应码，"SUCCESS"表示成功
+	Data *struct {
+		TaskID string             `json:"task_id"` // 任务ID
+		IPs    []ExclusiveProxyIP `json:"ips"`     // IP列表
+		Num    int                `json:"num"`     // IP数量
+	} `json:"data"` // 数据
+	Message   string `json:"message"`    // 错误消息（如果有）
+	RequestId string `json:"request_id"` // 请求ID
+}
+
+// ExclusiveProxyQueryResponse 独享代理查询响应
+type ExclusiveProxyQueryResponse struct {
+	Code string `json:"code"` // 响应码，"SUCCESS"表示成功
+	Data *struct {
+		Num   int                  `json:"num"`   // 任务数量
+		Tasks []ExclusiveProxyTask `json:"tasks"` // 任务列表
+	} `json:"data"` // 数据
+	RequestId string `json:"request_id"` // 请求ID
 }

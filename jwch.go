@@ -42,9 +42,9 @@ func NewStudent() *Student {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	// 如果启用了代理，先获取隧道地址再设置代理
+	// 如果启用了代理，先获取代理地址再设置代理
 	if config.Proxy.Enabled {
-		_, err := config.GetTunnelAddress()
+		_, err := config.GetProxyAddress()
 		if err == nil && config.Proxy.ProxyServer != "" {
 			proxyURL, err := config.GetProxyURL()
 			if err == nil {
