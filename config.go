@@ -56,6 +56,11 @@ func (c *Config) GetTunnelAddress() (string, error) {
 		return "", fmt.Errorf("代理未启用或认证信息不完整")
 	}
 
+	// 1) 优先使用当前Config中已存在的代理地址
+	if c.Proxy.ProxyServer != "" {
+		return c.Proxy.ProxyServer, nil
+	}
+
 	client := &http.Client{}
 
 	// 构建请求参数
