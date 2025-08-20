@@ -22,31 +22,40 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sync"
 
 	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/errno"
 )
 
+// 全局缓存，避免重复获取隧道地址
+var (
+	globalConfig     *Config
+	globalConfigOnce sync.Once
+)
+
 // LoadConfigFromEnv 从环境变量加载配置
 func LoadConfigFromEnv() *Config {
-	config := &Config{
-		Proxy: ProxyConfig{
-			Enabled: false,
-		},
-	}
+	globalConfigOnce.Do(func() {
+		globalConfig = &Config{
+			Proxy: ProxyConfig{
+				Enabled: false,
+			},
+		}
 
-	// 从环境变量读取代理配置
-	if authKey := os.Getenv("QINGGUO_AUTH_KEY"); authKey != "" {
-		config.Proxy.AuthKey = authKey
-	}
-	if authPwd := os.Getenv("QINGGUO_AUTH_PWD"); authPwd != "" {
-		config.Proxy.AuthPwd = authPwd
-	}
-	if enabled := os.Getenv("QINGGUO_PROXY_ENABLED"); enabled == "true" {
-		config.Proxy.Enabled = true
-	}
+		// 从环境变量读取代理配置
+		if authKey := os.Getenv("QINGGUO_AUTH_KEY"); authKey != "" {
+			globalConfig.Proxy.AuthKey = authKey
+		}
+		if authPwd := os.Getenv("QINGGUO_AUTH_PWD"); authPwd != "" {
+			globalConfig.Proxy.AuthPwd = authPwd
+		}
+		if enabled := os.Getenv("QINGGUO_PROXY_ENABLED"); enabled == "true" {
+			globalConfig.Proxy.Enabled = true
+		}
+	})
 
-	return config
+	return globalConfig
 }
 
 // GetTunnelAddress 获取青果网络隧道地址
