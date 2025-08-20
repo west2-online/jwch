@@ -46,6 +46,7 @@ func NewStudent() *Student {
 	if config.Proxy.Enabled {
 		_, err := config.GetTunnelAddress()
 		if err == nil && config.Proxy.ProxyServer != "" {
+			// fmt.Println("proxy server", config.Proxy.ProxyServer)
 			proxyURL, err := config.GetProxyURL()
 			if err == nil {
 				transport.Proxy = http.ProxyURL(proxyURL)

@@ -31,8 +31,7 @@ import (
 func LoadConfigFromEnv() *Config {
 	config := &Config{
 		Proxy: ProxyConfig{
-			TunnelURL: constants.QingGuoTunnelURL,
-			Enabled:   false,
+			Enabled: false,
 		},
 	}
 
@@ -69,7 +68,7 @@ func (c *Config) GetTunnelAddress() (string, error) {
 	params.Set("pwd", c.Proxy.AuthPwd)
 
 	// 发送GET请求
-	resp, err := client.Get(c.Proxy.TunnelURL + "?" + params.Encode())
+	resp, err := client.Get(constants.QingGuoTunnelURL + "?" + params.Encode())
 	if err != nil {
 		return "", errno.HTTPQueryError.WithMessage("获取隧道地址失败").WithErr(err)
 	}
