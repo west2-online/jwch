@@ -30,7 +30,7 @@ import (
 func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, totalPages int, err error) {
 	// 获取通知公告页面的总页数
 	res, err := s.NewRequest().
-		SetHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36").
+		SetHeader("User-Agent", constants.UserAgent).
 		Get(constants.NoticeInfoQueryURL)
 	if err != nil {
 		return nil, 0, err
@@ -62,7 +62,7 @@ func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, totalPa
 	num := lastPageNum - req.PageNum + 1
 	url := fmt.Sprintf("https://jwch.fzu.edu.cn/jxtz/%d.htm", num)
 	resp, err := s.NewRequest().
-		SetHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36").
+		SetHeader("User-Agent", constants.UserAgent).
 		Get(url)
 	if err != nil {
 		return nil, lastPageNum, err

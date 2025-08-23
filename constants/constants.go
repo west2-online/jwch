@@ -35,6 +35,8 @@ const (
 	JwchLocateDateUrl   = "https://jwcjwxt2.fzu.edu.cn:82/week.asp"
 	JwchPingYiUrl       = "student/jscp/TeaList.aspx"
 
+	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+
 	JwchPrefix  = "https://jwcjwxt2.fzu.edu.cn:81"
 	JwchReferer = "https://jwcjwxt2.fzu.edu.cn:82/"
 	JwchOrigin  = "https://jwcjwxt2.fzu.edu.cn:82/"
