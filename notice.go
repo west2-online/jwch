@@ -29,12 +29,20 @@ import (
 
 func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, totalPages int, err error) {
 	// 获取通知公告页面的总页数
-	res, err := s.PostWithIdentifier(constants.NoticeInfoQueryURL, map[string]string{})
+	res, err := s.NewRequest().
+		SetHeader("User-Agent", constants.UserAgent).
+		Get(constants.NoticeInfoQueryURL)
 	if err != nil {
 		return nil, 0, err
 	}
+
+	doc, err := htmlquery.Parse(strings.NewReader(string(res.Body())))
+	if err != nil {
+		return nil, 0, err
+	}
+
 	// 获取总页数
-	lastPageNum, err := getTotalPages(res)
+	lastPageNum, err := getTotalPages(doc)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -44,7 +52,7 @@ func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, totalPa
 	}
 	// 首页直接爬取
 	if req.PageNum == 1 {
-		list, err = parseNoticeInfo(res)
+		list, err = parseNoticeInfo(doc)
 		if err != nil {
 			return nil, lastPageNum, err
 		}
@@ -53,7 +61,14 @@ func (s *Student) GetNoticeInfo(req *NoticeInfoReq) (list []*NoticeInfo, totalPa
 	// 根据总页数计算 url
 	num := lastPageNum - req.PageNum + 1
 	url := fmt.Sprintf("https://jwch.fzu.edu.cn/jxtz/%d.htm", num)
-	doc, err := s.PostWithIdentifier(url, map[string]string{})
+	resp, err := s.NewRequest().
+		SetHeader("User-Agent", constants.UserAgent).
+		Get(url)
+	if err != nil {
+		return nil, lastPageNum, err
+	}
+
+	doc, err = htmlquery.Parse(strings.NewReader(string(resp.Body())))
 	if err != nil {
 		return nil, lastPageNum, err
 	}
