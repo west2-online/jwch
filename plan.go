@@ -31,7 +31,7 @@ func (s *Student) GetCultivatePlan() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	// 获取初始页面状态
 	viewStateMap, err := s.getState(constants.CultivatePlanURL)
 	if err != nil {
@@ -67,7 +67,7 @@ func (s *Student) getCultivatePlanWithPreciseMatch(info *StudentDetail, viewStat
 	for _, option := range collegeOptions {
 		optionText := htmlquery.InnerText(option)
 		optionValue := htmlquery.SelectAttr(option, "value")
-		
+
 		// 直接匹配学院名称
 		if optionText == info.College {
 			collegeCode = optionValue
@@ -75,8 +75,8 @@ func (s *Student) getCultivatePlanWithPreciseMatch(info *StudentDetail, viewStat
 		}
 		
 		// 处理学院改名的情况
-		if (strings.Contains(optionText, "计算机与大数据") || strings.Contains(optionText, "数学与统计")) && 
-		   strings.Contains(info.College, "数学与计算机") {
+		if (strings.Contains(optionText, "计算机与大数据") || strings.Contains(optionText, "数学与统计")) &&
+			strings.Contains(info.College, "数学与计算机") {
 			collegeCode = optionValue
 			break
 		}
@@ -87,20 +87,20 @@ func (s *Student) getCultivatePlanWithPreciseMatch(info *StudentDetail, viewStat
 	}
 
 	viewStateGenerator := htmlquery.SelectAttr(htmlquery.FindOne(initialDoc, `//*[@id="__VIEWSTATEGENERATOR"]`), "value")
-	
+
 	// 选择年级和学院后获取专业列表
 	majorListResp, err := s.PostWithIdentifier(constants.CultivatePlanURL, map[string]string{
-		"__VIEWSTATE":            viewStateMap["VIEWSTATE"],
-		"__EVENTVALIDATION":      viewStateMap["EVENTVALIDATION"],
-		"__EVENTTARGET":          "ctl00$njdpl",
-		"__EVENTARGUMENT":        "",
-		"__VIEWSTATEGENERATOR":   viewStateGenerator,
-		"ctl00$njdpl":            info.Grade,				// 年级
-		"ctl00$xymcdpl":          collegeCode,				// 学院名称
-		"ctl00$dldpl":            "<-全部->",				 // 大类
-		"ctl00$zymcdpl":          "<-全部->",				 // 专业代码
-		"ctl00$zylbdpl":          "本专业",				 // 修读类别：本专业/辅修
-		"ctl00$ContentPlaceHolder1$DDL_syxw": "<-全部->",	 // 授予学位
+		"__VIEWSTATE":                        viewStateMap["VIEWSTATE"],
+		"__EVENTVALIDATION":                  viewStateMap["EVENTVALIDATION"],
+		"__EVENTTARGET":                      "ctl00$njdpl",
+		"__EVENTARGUMENT":                    "",
+		"__VIEWSTATEGENERATOR":               viewStateGenerator,
+		"ctl00$njdpl":                        info.Grade,	// 年级
+		"ctl00$xymcdpl":                      collegeCode,	// 学院名称
+		"ctl00$dldpl":                        "<-全部->",	// 大类
+		"ctl00$zymcdpl":                      "<-全部->",	// 专业代码
+		"ctl00$zylbdpl":                      "本专业",		// 修读类别：本专业/辅修
+		"ctl00$ContentPlaceHolder1$DDL_syxw": "<-全部->",	// 授予学位
 		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
 	})
 	if err != nil {
@@ -128,7 +128,7 @@ func (s *Student) getCultivatePlanWithPreciseMatch(info *StudentDetail, viewStat
 	}
 
 	// 构造最终URL
-	finalURL := fmt.Sprintf("/pyfa/pyjh/pyfa_bzy.aspx?nj=%s&xyh=%s&zyh=%s&zylb=本专业&id=%s", 
+	finalURL := fmt.Sprintf("/pyfa/pyjh/pyfa_bzy.aspx?nj=%s&xyh=%s&zyh=%s&zylb=本专业&id=%s",
 		info.Grade, collegeCode, majorCode, s.Identifier)
 	
 	return constants.JwchPrefix + finalURL, nil
@@ -141,7 +141,7 @@ func (s *Student) getCultivatePlanWithFallback(info *StudentDetail, viewStateMap
 	if err != nil {
 		return "", err
 	}
-	
+
 	viewStateGenerator := htmlquery.SelectAttr(htmlquery.FindOne(initialDoc, `//*[@id="__VIEWSTATEGENERATOR"]`), "value")
 
 	// 只选择年级，提交查询
