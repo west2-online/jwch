@@ -95,12 +95,12 @@ func (s *Student) getCultivatePlanWithPreciseMatch(info *StudentDetail, viewStat
 		"__EVENTTARGET":                       "ctl00$njdpl",
 		"__EVENTARGUMENT":                     "",
 		"__VIEWSTATEGENERATOR":                viewStateGenerator,
-		"ctl00$njdpl":                         info.Grade,	// 年级
-		"ctl00$xymcdpl":                       collegeCode,	// 学院名称
-		"ctl00$dldpl":                         "<-全部->",	// 大类
-		"ctl00$zymcdpl":                       "<-全部->",	// 专业代码
-		"ctl00$zylbdpl":                       "本专业",		// 修读类别：本专业/辅修
-		"ctl00$ContentPlaceHolder1$DDL_syxw":  "<-全部->",	// 授予学位
+		"ctl00$njdpl":                         info.Grade,  // 年级
+		"ctl00$xymcdpl":                       collegeCode, // 学院名称
+		"ctl00$dldpl":                         "<-全部->",    // 大类
+		"ctl00$zymcdpl":                       "<-全部->",    // 专业代码
+		"ctl00$zylbdpl":                       "本专业",       // 修读类别：本专业/辅修
+		"ctl00$ContentPlaceHolder1$DDL_syxw":  "<-全部->",    // 授予学位
 		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
 	})
 	if err != nil {
@@ -130,7 +130,7 @@ func (s *Student) getCultivatePlanWithPreciseMatch(info *StudentDetail, viewStat
 	// 构造最终URL
 	finalURL := fmt.Sprintf("/pyfa/pyjh/pyfa_bzy.aspx?nj=%s&xyh=%s&zyh=%s&zylb=本专业&id=%s",
 		info.Grade, collegeCode, majorCode, s.Identifier)
-	
+
 	return constants.JwchPrefix + finalURL, nil
 }
 
