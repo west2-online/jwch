@@ -43,7 +43,7 @@ func (s *Student) GetMarks() (resp []*Mark, err error) {
 	matches := re.FindStringSubmatch(htmlStr)
 	if len(matches) == 2 {
 		message := matches[1]
-		return nil, errno.HTMLParseError.WithMessage(fmt.Sprintf("%s", message))
+		return nil, errno.HTMLParseError.WithMessage(message)
 	}
 
 	table := htmlquery.FindOne(res, `//*[@id="ContentPlaceHolder1_DataList_xxk"]/tbody`)
