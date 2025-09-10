@@ -18,6 +18,7 @@ package jwch
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -34,6 +35,15 @@ func (s *Student) GetMarks() (resp []*Mark, err error) {
 	res, err := s.GetWithIdentifier(constants.MarksQueryURL)
 	if err != nil {
 		return nil, err
+	}
+
+	// window.alert( '你尚有学费未缴清，暂时不能查询成绩，如有疑问请与计财处联系！');
+	htmlStr := htmlquery.OutputHTML(res, false)
+	re := regexp.MustCompile(`window\.alert\s*\(\s*'([^']*)'\s*\)`)
+	matches := re.FindStringSubmatch(htmlStr)
+	if len(matches) == 2 {
+		message := matches[1]
+		return nil, errno.HTMLParseError.WithMessage(message)
 	}
 
 	table := htmlquery.FindOne(res, `//*[@id="ContentPlaceHolder1_DataList_xxk"]/tbody`)
