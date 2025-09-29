@@ -18,6 +18,7 @@ package jwch
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
@@ -131,4 +132,111 @@ func (s *Student) GetGPA() (gpa *GPABean, err error) {
 	gpa.Data = data
 
 	return gpa, nil
+}
+
+// GetCreditV2 用于获取V2版本的学分统计，返回指定的JSON结构
+func (s *Student) GetCreditV2() (CreditResponse, error) {
+	resp, err := s.GetWithIdentifier(constants.CreditQueryURL)
+	if err != nil {
+		return nil, err
+	}
+
+	spanNode := htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_LB_kb"]`)
+	if spanNode == nil {
+		return nil, fmt.Errorf("failed to find the statistics span element")
+	}
+
+	tables := htmlquery.Find(spanNode, "//table")
+	if len(tables) == 0 {
+		return nil, fmt.Errorf("failed to find tables within the span element")
+	}
+	tables = tables[:len(tables)-1] // 去掉最后一个表格
+
+	var majorCredits, minorCredits []*CreditStatistics
+
+	// 处理主修专业和辅修专业
+	for tableIndex, table := range tables {
+		rows := htmlquery.Find(table, "//tr")
+
+		// 临时存储三列数据
+		temp := [3][]string{
+			make([]string, 0),
+			make([]string, 0),
+			make([]string, 0),
+		}
+		// 遍历每行，提取单元格数据
+		for index, row := range rows {
+			cells := htmlquery.Find(row, "./td")
+			// 提取单元格数据
+			for _, cell := range cells {
+				text := htmlquery.InnerText(cell)
+				if text != "查" { // 因为表格的第三行多了一个单元格，去掉一个无用的格子它使得表格规整
+					temp[index] = append(temp[index], text)
+				}
+			}
+		}
+		// 构建 CreditStatistics
+		for i := 0; i < len(temp[0]); i++ {
+			// 去掉个人信息的列（这列第一个单元格式空的）和"修习情况"这个无效的列
+			if strings.TrimSpace(temp[0][i]) != "" && !strings.Contains(temp[0][i], "情况") {
+				bean := &CreditStatistics{
+					Type:  temp[0][i],
+					Gain:  temp[2][i],
+					Total: temp[1][i],
+				}
+				// 第一个表格是主修专业，第二个表格是辅修专业
+				if tableIndex == 0 {
+					majorCredits = append(majorCredits, bean)
+				} else {
+					minorCredits = append(minorCredits, bean)
+				}
+			}
+		}
+	}
+
+	majorItem := buildCreditCategory("主修专业", majorCredits)
+	minorItem := buildCreditCategory("辅修专业", minorCredits)
+
+	return CreditResponse{majorItem, minorItem}, nil
+}
+
+func buildCreditCategory(categoryType string, credits []*CreditStatistics) *CreditCategory {
+	category := &CreditCategory{
+		Type: categoryType,
+		Data: make([]*CreditDetail, 0, len(credits)),
+	}
+
+	specialKeys := []string{"奖励", "其它", "重修", "正在修习", "CET"}
+	for _, credit := range credits {
+		isSpecial := false
+		for _, key := range specialKeys {
+			if strings.Contains(credit.Type, key) {
+				isSpecial = true
+				break
+			}
+		}
+
+		if isSpecial {
+			category.Data = append(category.Data, &CreditDetail{
+				Key:   credit.Type,
+				Value: credit.Gain,
+			})
+		} else {
+			gain, _ := strconv.ParseFloat(credit.Gain, 64)
+			total, _ := strconv.ParseFloat(credit.Total, 64)
+			var value string
+
+			if gain >= total {
+				value = fmt.Sprintf("%.1f/%.1f(已修满)", gain, total)
+			} else {
+				value = fmt.Sprintf("%.1f/%.1f(还需%.1f分)", gain, total, total-gain)
+			}
+
+			category.Data = append(category.Data, &CreditDetail{
+				Key:   credit.Type,
+				Value: value,
+			})
+		}
+	}
+	return category
 }
