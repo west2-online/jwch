@@ -210,7 +210,10 @@ func buildCreditCategory(categoryType string, credits []*CreditStatistics) *Cred
 		Data: make([]*CreditDetail, 0, len(credits)),
 	}
 
+	// 用于计算"总计"栏的还需学分总和
+	var totalNeed float64
 	specialKeys := []string{"奖励", "其它", "重修", "正在修习", "CET"}
+
 	for _, credit := range credits {
 		isSpecial := false
 		for _, key := range specialKeys {
@@ -220,7 +223,17 @@ func buildCreditCategory(categoryType string, credits []*CreditStatistics) *Cred
 			}
 		}
 
-		if isSpecial {
+		// 处理"总计"行
+		if credit.Type == "总计" {
+			gain, _ := strconv.ParseFloat(credit.Gain, 64)
+			total, _ := strconv.ParseFloat(credit.Total, 64)
+			value := fmt.Sprintf("%.1f/%.1f(还需%.1f分)", gain, total, totalNeed)
+
+			category.Data = append(category.Data, &CreditDetail{
+				Key:   credit.Type,
+				Value: value,
+			})
+		} else if isSpecial {
 			category.Data = append(category.Data, &CreditDetail{
 				Key:   credit.Type,
 				Value: credit.Gain,
@@ -233,7 +246,10 @@ func buildCreditCategory(categoryType string, credits []*CreditStatistics) *Cred
 			if gain >= total {
 				value = fmt.Sprintf("%.1f/%.1f(已修满)", gain, total)
 			} else {
-				value = fmt.Sprintf("%.1f/%.1f(还需%.1f分)", gain, total, total-gain)
+				need := total - gain
+				value = fmt.Sprintf("%.1f/%.1f(还需%.1f分)", gain, total, need)
+				// 未修满时需要的学分计入总计
+				totalNeed += need
 			}
 
 			category.Data = append(category.Data, &CreditDetail{
