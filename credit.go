@@ -229,7 +229,7 @@ func buildCreditCategory(categoryType string, credits []*CreditStatistics) *Cred
 			// 处理"总计"行
 			gain, _ := strconv.ParseFloat(credit.Gain, 64)
 			total, _ := strconv.ParseFloat(credit.Total, 64)
-			value := fmt.Sprintf("%.1f/%.1f(还需%.1f分)", gain, total, totalNeed)
+			value := fmt.Sprintf("%g / %g (还需 %g 分)", gain, total, totalNeed)
 
 			category.Data = append(category.Data, &CreditDetail{
 				Key:   credit.Type,
@@ -246,10 +246,10 @@ func buildCreditCategory(categoryType string, credits []*CreditStatistics) *Cred
 			var value string
 
 			if gain >= total {
-				value = fmt.Sprintf("%.1f/%.1f(已修满)", gain, total)
+				value = fmt.Sprintf("%g / %g", gain, total)
 			} else {
 				need := total - gain
-				value = fmt.Sprintf("%.1f/%.1f(还需%.1f分)", gain, total, need)
+				value = fmt.Sprintf("%g / %g (还需 %g 分)", gain, total, need)
 				// 未修满时需要的学分计入总计
 				totalNeed += need
 			}
