@@ -195,9 +195,13 @@ func (s *Student) GetCreditV2() (CreditResponse, error) {
 	}
 
 	majorItem := buildCreditCategory("主修专业", majorCredits)
-	minorItem := buildCreditCategory("辅修专业", minorCredits)
 
-	return CreditResponse{majorItem, minorItem}, nil
+	if len(minorCredits) > 0 {
+		minorItem := buildCreditCategory("辅修专业", minorCredits)
+		return CreditResponse{majorItem, minorItem}, nil
+	}
+
+	return CreditResponse{majorItem}, nil
 }
 
 func buildCreditCategory(categoryType string, credits []*CreditStatistics) *CreditCategory {
