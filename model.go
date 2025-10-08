@@ -243,18 +243,3 @@ type TunnelResponse struct {
 	Data      []TunnelData `json:"data"`       // 隧道数据数组
 	RequestId string       `json:"request_id"` // 请求ID
 }
-
-// CreditDetail 用于表示学分的详细数据项
-type CreditDetail struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-// CreditCategory 用于表示学分分类
-type CreditCategory struct {
-	Type string          `json:"type"`
-	Data []*CreditDetail `json:"data"`
-}
-
-// CreditResponse 用于学分响应
-type CreditResponse []*CreditCategory
