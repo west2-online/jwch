@@ -223,8 +223,10 @@ func buildCreditCategory(categoryType string, credits []*CreditStatistics) *Cred
 			}
 		}
 
-		// 处理"总计"行
-		if credit.Type == "总计" {
+		creditType := credit.Type
+		switch {
+		case creditType == "总计":
+			// 处理"总计"行
 			gain, _ := strconv.ParseFloat(credit.Gain, 64)
 			total, _ := strconv.ParseFloat(credit.Total, 64)
 			value := fmt.Sprintf("%.1f/%.1f(还需%.1f分)", gain, total, totalNeed)
@@ -233,12 +235,12 @@ func buildCreditCategory(categoryType string, credits []*CreditStatistics) *Cred
 				Key:   credit.Type,
 				Value: value,
 			})
-		} else if isSpecial {
+		case isSpecial:
 			category.Data = append(category.Data, &CreditDetail{
 				Key:   credit.Type,
 				Value: credit.Gain,
 			})
-		} else {
+		default:
 			gain, _ := strconv.ParseFloat(credit.Gain, 64)
 			total, _ := strconv.ParseFloat(credit.Total, 64)
 			var value string
