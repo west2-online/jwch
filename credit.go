@@ -18,7 +18,6 @@ package jwch
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
@@ -134,25 +133,23 @@ func (s *Student) GetGPA() (gpa *GPABean, err error) {
 	return gpa, nil
 }
 
-// GetCreditV2 用于获取V2版本的学分统计，返回指定的JSON结构
-func (s *Student) GetCreditV2() (CreditResponse, error) {
+// GetCreditV2 用于获取原始的学分统计
+func (s *Student) GetCreditV2() (majorCredits, minorCredits []*CreditStatistics, err error) {
 	resp, err := s.GetWithIdentifier(constants.CreditQueryURL)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	spanNode := htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_LB_kb"]`)
 	if spanNode == nil {
-		return nil, fmt.Errorf("failed to find the statistics span element")
+		return nil, nil, fmt.Errorf("failed to find the statistics span element")
 	}
 
 	tables := htmlquery.Find(spanNode, "//table")
 	if len(tables) == 0 {
-		return nil, fmt.Errorf("failed to find tables within the span element")
+		return nil, nil, fmt.Errorf("failed to find tables within the span element")
 	}
 	tables = tables[:len(tables)-1] // 去掉最后一个表格
-
-	var majorCredits, minorCredits []*CreditStatistics
 
 	// 处理主修专业和辅修专业
 	for tableIndex, table := range tables {
@@ -194,53 +191,5 @@ func (s *Student) GetCreditV2() (CreditResponse, error) {
 		}
 	}
 
-	majorItem := buildCreditCategory("主修专业", majorCredits)
-
-	if len(minorCredits) > 0 {
-		minorItem := buildCreditCategory("辅修专业", minorCredits)
-		return CreditResponse{majorItem, minorItem}, nil
-	}
-
-	return CreditResponse{majorItem}, nil
-}
-
-func buildCreditCategory(categoryType string, credits []*CreditStatistics) *CreditCategory {
-	category := &CreditCategory{
-		Type: categoryType,
-		Data: make([]*CreditDetail, 0, len(credits)),
-	}
-
-	specialKeys := []string{"奖励", "其它", "重修", "正在修习", "CET"}
-	for _, credit := range credits {
-		isSpecial := false
-		for _, key := range specialKeys {
-			if strings.Contains(credit.Type, key) {
-				isSpecial = true
-				break
-			}
-		}
-
-		if isSpecial {
-			category.Data = append(category.Data, &CreditDetail{
-				Key:   credit.Type,
-				Value: credit.Gain,
-			})
-		} else {
-			gain, _ := strconv.ParseFloat(credit.Gain, 64)
-			total, _ := strconv.ParseFloat(credit.Total, 64)
-			var value string
-
-			if gain >= total {
-				value = fmt.Sprintf("%.1f/%.1f(已修满)", gain, total)
-			} else {
-				value = fmt.Sprintf("%.1f/%.1f(还需%.1f分)", gain, total, total-gain)
-			}
-
-			category.Data = append(category.Data, &CreditDetail{
-				Key:   credit.Type,
-				Value: value,
-			})
-		}
-	}
-	return category
+	return majorCredits, minorCredits, err
 }
