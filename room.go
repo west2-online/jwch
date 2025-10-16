@@ -201,8 +201,9 @@ func (s *Student) getState(url string) (map[string]string, error) {
 // 获取教室类型
 func (s *Student) getEmptyRoomTypes(viewStateMap map[string]string, building string, req EmptyRoomReq) ([]string, map[string]string, error) {
 	var res *html.Node
+	var err error
 	if building != "" {
-		res, _ = s.PostWithIdentifier(constants.ClassroomQueryURL, map[string]string{
+		res, err = s.PostWithIdentifier(constants.ClassroomQueryURL, map[string]string{
 			"__VIEWSTATE":                         viewStateMap["VIEWSTATE"],
 			"__EVENTVALIDATION":                   viewStateMap["EVENTVALIDATION"],
 			"ctl00$TB_rq":                         req.Time,
@@ -217,7 +218,7 @@ func (s *Student) getEmptyRoomTypes(viewStateMap map[string]string, building str
 			"ctl00$ContentPlaceHolder1$BT_search": "查询",
 		})
 	} else {
-		res, _ = s.PostWithIdentifier(constants.ClassroomQueryURL, map[string]string{
+		res, err = s.PostWithIdentifier(constants.ClassroomQueryURL, map[string]string{
 			"__VIEWSTATE":                         viewStateMap["VIEWSTATE"],
 			"__EVENTVALIDATION":                   viewStateMap["EVENTVALIDATION"],
 			"ctl00$TB_rq":                         req.Time,
@@ -231,6 +232,13 @@ func (s *Student) getEmptyRoomTypes(viewStateMap map[string]string, building str
 			"ctl00$ContentPlaceHolder1$BT_search": "查询",
 		})
 	}
+	if err != nil {
+		return nil, nil, err
+	}
+	if res == nil {
+		return nil, nil, nil
+	}
+
 	sel := htmlquery.Find(res, "//*[@id='jslxdpl']//option")
 	var types []string
 	for _, opt := range sel {
@@ -247,6 +255,9 @@ func (s *Student) getEmptyRoomTypes(viewStateMap map[string]string, building str
 }
 
 func parseEmptyRoom(doc *html.Node) ([]string, error) {
+	if doc == nil {
+		return nil, nil
+	}
 	sel := htmlquery.Find(doc, "//*[@id='jsdpl']//option")
 	var res []string
 	for _, opt := range sel {
