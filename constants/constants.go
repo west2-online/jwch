@@ -33,6 +33,7 @@ const (
 	JwchNoticeURLPrefix = "https://jwch.fzu.edu.cn/"
 	CultivatePlanURL    = "https://jwcjwxt2.fzu.edu.cn:81/pyfa/pyjh/pyjh_list.aspx"
 	JwchLocateDateUrl   = "https://jwcjwxt2.fzu.edu.cn:82/week.asp"
+	LectureURL          = "https://jwcjwxt2.fzu.edu.cn:81/student/glbm/lecture/jxjt_cszt.aspx"
 	JwchPingYiUrl       = "student/jscp/TeaList.aspx"
 
 	UserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
