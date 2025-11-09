@@ -304,3 +304,10 @@ func TestGetLocateDate(t *testing.T) {
 	}
 	fmt.Println(utils.PrintStruct(date))
 }
+
+func TestGetLectures(t *testing.T) {
+	_, err := stu.GetLectures()
+	if err != nil {
+		t.Error(err)
+	}
+}
