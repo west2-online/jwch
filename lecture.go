@@ -63,7 +63,8 @@ func (s *Student) GetLectures() ([]*Lecture, error) {
 }
 
 func parseDateTime(dateTime string) int64 {
-	t, err := time.Parse("2006-01-02\u00A0\u00A015：04", dateTime)
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+	t, err := time.ParseInLocation("2006-01-02\u00A0\u00A015：04", dateTime, loc)
 	if err != nil {
 		return 0
 	}
