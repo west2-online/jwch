@@ -53,7 +53,7 @@ func (s *Student) GetLectures() ([]*Lecture, error) {
 			IssueNumber:      utils.SafeAtoi(htmlquery.InnerText(cells[1])),
 			Title:            htmlquery.InnerText(cells[2]),
 			Speaker:          htmlquery.InnerText(cells[3]),
-			Time:             parseDateTime(htmlquery.InnerText(cells[4])),
+			Timestamp:        parseDateTime(htmlquery.InnerText(cells[4])),
 			Location:         htmlquery.InnerText(cells[5]),
 			AttendanceStatus: htmlquery.InnerText(cells[6]),
 		})
@@ -62,10 +62,10 @@ func (s *Student) GetLectures() ([]*Lecture, error) {
 	return res, nil
 }
 
-func parseDateTime(dateTime string) string {
+func parseDateTime(dateTime string) int64 {
 	t, err := time.Parse("2006-01-02\u00A0\u00A015：04", dateTime)
 	if err != nil {
-		return dateTime
+		return 0
 	}
-	return t.Format("2006-01-02 15:04")
+	return t.UnixMilli()
 }

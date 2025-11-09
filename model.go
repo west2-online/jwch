@@ -223,7 +223,7 @@ type Lecture struct {
 	IssueNumber      int    `json:"issue_number"`      // 期号
 	Title            string `json:"title"`             // 讲座题目
 	Speaker          string `json:"speaker"`           // 主讲人
-	Time             string `json:"time"`              // 时间
+	Timestamp        int64  `json:"timestamp"`         // 时间戳
 	Location         string `json:"location"`          // 地点
 	AttendanceStatus string `json:"attendance_status"` // 听取讲座情况
 }
