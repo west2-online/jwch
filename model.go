@@ -217,6 +217,17 @@ type LocateDate struct {
 	Term string
 }
 
+// Lecture 讲座信息
+type Lecture struct {
+	Category         string `json:"category"`          // 讲座类别
+	IssueNumber      int    `json:"issue_number"`      // 期号
+	Title            string `json:"title"`             // 讲座题目
+	Speaker          string `json:"speaker"`           // 主讲人
+	Timestamp        int64  `json:"timestamp"`         // 时间戳
+	Location         string `json:"location"`          // 地点
+	AttendanceStatus string `json:"attendance_status"` // 听取讲座情况
+}
+
 // ProxyConfig 青果网络代理配置
 type ProxyConfig struct {
 	AuthKey     string `json:"auth_key"`     // 青果网络认证密钥
