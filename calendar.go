@@ -111,10 +111,16 @@ func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
 		}
 
 		rawData := strings.Split(event, "为")
-		rawDate := strings.Split(rawData[0], "至")
+		if len(rawData) < 2 {
+			// 远古学期的数据格式可能不统一，不做处理
+			res.Events = append(res.Events, CalTermEvent{Name: strings.TrimSpace(event)})
+			continue
+		}
+
+		rawDate := strings.Split(strings.TrimSpace(rawData[0]), "至")
+		name := strings.TrimSpace(strings.Join(rawData[1:], "为"))
 
 		if len(rawDate) >= 2 {
-			name := strings.TrimSpace(rawData[1])
 			startDate := strings.TrimSpace(rawDate[0])
 			endDate := strings.TrimSpace(rawDate[1])
 
@@ -124,9 +130,12 @@ func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
 				EndDate:   endDate,
 			})
 		} else {
-			// 远古学期的数据格式可能不统一，不做处理
+			// 兼容单日事件格式: 2025-09-07为学生注册
+			date := strings.TrimSpace(rawDate[0])
 			res.Events = append(res.Events, CalTermEvent{
-				Name: rawData[0],
+				Name:      name,
+				StartDate: date,
+				EndDate:   date,
 			})
 		}
 	}
