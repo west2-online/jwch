@@ -235,96 +235,18 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 				single := !strings.Contains(classBasicInfo[1], "双")
 				double := !strings.Contains(classBasicInfo[1], "单")
 
-				if len(adjustRules) == 0 {
-					scheduleRules = append(scheduleRules, CourseScheduleRule{
-						Location:     location,
-						StartClass:   startClass,
-						EndClass:     endClass,
-						StartWeek:    startWeek,
-						EndWeek:      endWeek,
-						Weekday:      weekDay,
-						Single:       single,
-						Double:       double,
-						Adjust:       false,
-						FromFullWeek: false,
-					})
-				} else {
-					startWeek := utils.SafeAtoi(weekInfo[0])
-					endWeek := utils.SafeAtoi(weekInfo[1])
-					startClass := utils.SafeAtoi(classInfo[0])
-					endClass := utils.SafeAtoi(classInfo[1])
-					removedWeeks := []int{}
-
-					for _, adjustRule := range adjustRules {
-						// 匹配是否是对应的调课信息
-						if adjustRule.OldWeek < startWeek ||
-							adjustRule.OldWeek > endWeek ||
-							adjustRule.OldStartClass != startClass ||
-							adjustRule.OldEndClass != endClass ||
-							adjustRule.OldWeekday != weekDay {
-							continue
-						}
-
-						// 记录被去掉的周次
-						removedWeeks = append(removedWeeks, adjustRule.OldWeek)
-
-						// 添加新的课程信息
-						scheduleRules = append(scheduleRules, CourseScheduleRule{
-							Location:     adjustRule.NewLocation,
-							StartClass:   adjustRule.NewStartClass,
-							EndClass:     adjustRule.NewEndClass,
-							StartWeek:    adjustRule.NewWeek,
-							EndWeek:      adjustRule.NewWeek,
-							Weekday:      adjustRule.NewWeekday,
-							Single:       true,
-							Double:       true,
-							Adjust:       true, // 调课
-							FromFullWeek: false,
-						})
-					}
-
-					sort.Ints(removedWeeks)
-					// 去掉被调课的周次
-					curStartWeek := startWeek
-
-					for _, removedWeek := range removedWeeks {
-						if removedWeek == curStartWeek {
-							curStartWeek++
-
-							continue
-						}
-
-						scheduleRules = append(scheduleRules, CourseScheduleRule{
-							Location:     location,
-							StartClass:   startClass,
-							EndClass:     endClass,
-							StartWeek:    curStartWeek,
-							EndWeek:      removedWeek - 1,
-							Weekday:      weekDay,
-							Single:       single,
-							Double:       double,
-							Adjust:       false,
-							FromFullWeek: false,
-						})
-
-						curStartWeek = removedWeek + 1
-					}
-
-					if curStartWeek <= endWeek {
-						scheduleRules = append(scheduleRules, CourseScheduleRule{
-							Location:     location,
-							StartClass:   startClass,
-							EndClass:     endClass,
-							StartWeek:    curStartWeek,
-							EndWeek:      endWeek,
-							Weekday:      weekDay,
-							Single:       single,
-							Double:       double,
-							Adjust:       false,
-							FromFullWeek: false,
-						})
-					}
-				}
+				scheduleRules = append(scheduleRules, CourseScheduleRule{
+					Location:     location,
+					StartClass:   startClass,
+					EndClass:     endClass,
+					StartWeek:    startWeek,
+					EndWeek:      endWeek,
+					Weekday:      weekDay,
+					Single:       single,
+					Double:       double,
+					Adjust:       false,
+					FromFullWeek: false,
+				})
 			}
 		}
 
@@ -340,6 +262,7 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 			ExamType:              utils.GetChineseCharacter(htmlquery.OutputHTML(info[6], false)),
 			Teacher:               htmlquery.OutputHTML(info[7], false),
 			ScheduleRules:         scheduleRules,
+			AdjustRules:           adjustRules,
 			FullWeekScheduleRules: fullWeekScheduleRules,
 			RawScheduleRules:      strings.Join(courseInfo8, "\n"),
 			RawExamTime:           strings.TrimSpace(htmlquery.InnerText(info[9])),
@@ -366,4 +289,93 @@ func (s *Student) GetLocateDate() (*LocateDate, error) {
 	}
 
 	return &LocateDate{Week: matches[1], Year: matches[2], Term: matches[3]}, nil
+}
+
+// ApplyAdjustRules 将调课规则应用到原始课程安排上，返回调整后的 ScheduleRules。
+// 该函数会将匹配到的调课周次从原有规则中移除，并添加调课后的新规则。
+func ApplyAdjustRules(scheduleRules []CourseScheduleRule, adjustRules []CourseAdjustRule) []CourseScheduleRule {
+	if len(adjustRules) == 0 {
+		return scheduleRules
+	}
+
+	result := make([]CourseScheduleRule, 0, len(scheduleRules))
+
+	for _, rule := range scheduleRules {
+		removedWeeks := []int{}
+
+		for _, adj := range adjustRules {
+			// 匹配是否是对应的调课信息
+			if adj.OldWeek < rule.StartWeek ||
+				adj.OldWeek > rule.EndWeek ||
+				adj.OldStartClass != rule.StartClass ||
+				adj.OldEndClass != rule.EndClass ||
+				adj.OldWeekday != rule.Weekday {
+				continue
+			}
+
+			// 记录被调课的周次，后续需要从原有规则中移除
+			removedWeeks = append(removedWeeks, adj.OldWeek)
+
+			// 添加新的课程信息
+			result = append(result, CourseScheduleRule{
+				Location:     adj.NewLocation,
+				StartClass:   adj.NewStartClass,
+				EndClass:     adj.NewEndClass,
+				StartWeek:    adj.NewWeek,
+				EndWeek:      adj.NewWeek,
+				Weekday:      adj.NewWeekday,
+				Single:       true,
+				Double:       true,
+				Adjust:       true,
+				FromFullWeek: false,
+			})
+		}
+
+		if len(removedWeeks) == 0 {
+			result = append(result, rule)
+			continue
+		}
+
+		sort.Ints(removedWeeks)
+		// 去掉被调课的周次，并将剩余的周次按照连续的区间重新组合成新的规则
+		curStartWeek := rule.StartWeek
+		for _, removedWeek := range removedWeeks {
+			if removedWeek == curStartWeek {
+				curStartWeek++
+				continue
+			}
+
+			result = append(result, CourseScheduleRule{
+				Location:     rule.Location,
+				StartClass:   rule.StartClass,
+				EndClass:     rule.EndClass,
+				StartWeek:    curStartWeek,
+				EndWeek:      removedWeek - 1,
+				Weekday:      rule.Weekday,
+				Single:       rule.Single,
+				Double:       rule.Double,
+				Adjust:       false,
+				FromFullWeek: rule.FromFullWeek,
+			})
+
+			curStartWeek = removedWeek + 1
+		}
+
+		if curStartWeek <= rule.EndWeek {
+			result = append(result, CourseScheduleRule{
+				Location:     rule.Location,
+				StartClass:   rule.StartClass,
+				EndClass:     rule.EndClass,
+				StartWeek:    curStartWeek,
+				EndWeek:      rule.EndWeek,
+				Weekday:      rule.Weekday,
+				Single:       rule.Single,
+				Double:       rule.Double,
+				Adjust:       false,
+				FromFullWeek: rule.FromFullWeek,
+			})
+		}
+	}
+
+	return result
 }
