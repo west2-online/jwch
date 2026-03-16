@@ -19,6 +19,7 @@ package jwch
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/west2-online/jwch/constants"
@@ -309,5 +310,158 @@ func TestGetLectures(t *testing.T) {
 	_, err := stu.GetLectures()
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestApplyAdjustRules(t *testing.T) {
+	cases := []struct {
+		name     string
+		rules    []CourseScheduleRule
+		adjusts  []CourseAdjustRule
+		expected []CourseScheduleRule
+	}{
+		{
+			name: "NoAdjust",
+			rules: []CourseScheduleRule{
+				{Location: "旗山西1-206", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+			},
+			adjusts: nil,
+			expected: []CourseScheduleRule{
+				{Location: "旗山西1-206", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+			},
+		},
+		{
+			name: "EmptyAdjustRules",
+			rules: []CourseScheduleRule{
+				{Location: "旗山西1-206", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{},
+			expected: []CourseScheduleRule{
+				{Location: "旗山西1-206", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+			},
+		},
+		{
+			name: "SingleAdjust",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 5, EndClass: 6, StartWeek: 5, EndWeek: 18, Weekday: 3, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 6, OldWeekday: 3, OldStartClass: 5, OldEndClass: 6, NewWeek: 9, NewWeekday: 1, NewStartClass: 7, NewEndClass: 8, NewLocation: "旗山西1-206"},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "旗山西1-206", StartClass: 7, EndClass: 8, StartWeek: 9, EndWeek: 9, Weekday: 1, Single: true, Double: true, Adjust: true},
+				{Location: "铜盘A110", StartClass: 5, EndClass: 6, StartWeek: 5, EndWeek: 5, Weekday: 3, Single: true, Double: true},
+				{Location: "铜盘A110", StartClass: 5, EndClass: 6, StartWeek: 7, EndWeek: 18, Weekday: 3, Single: true, Double: true},
+			},
+		},
+		{
+			name: "AdjustFirstWeek",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 8, Weekday: 2, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 1, OldWeekday: 2, OldStartClass: 3, OldEndClass: 4, NewWeek: 10, NewWeekday: 5, NewStartClass: 3, NewEndClass: 4, NewLocation: "旗山东3-101"},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "旗山东3-101", StartClass: 3, EndClass: 4, StartWeek: 10, EndWeek: 10, Weekday: 5, Single: true, Double: true, Adjust: true},
+				{Location: "铜盘A110", StartClass: 3, EndClass: 4, StartWeek: 2, EndWeek: 8, Weekday: 2, Single: true, Double: true},
+			},
+		},
+		{
+			name: "AdjustLastWeek",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 1, EndClass: 2, StartWeek: 5, EndWeek: 10, Weekday: 4, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 10, OldWeekday: 4, OldStartClass: 1, OldEndClass: 2, NewWeek: 12, NewWeekday: 3, NewStartClass: 1, NewEndClass: 2, NewLocation: "旗山西1-206"},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "旗山西1-206", StartClass: 1, EndClass: 2, StartWeek: 12, EndWeek: 12, Weekday: 3, Single: true, Double: true, Adjust: true},
+				{Location: "铜盘A110", StartClass: 1, EndClass: 2, StartWeek: 5, EndWeek: 9, Weekday: 4, Single: true, Double: true},
+			},
+		},
+		{
+			name: "MultipleAdjusts",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 5, EndClass: 6, StartWeek: 5, EndWeek: 18, Weekday: 3, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 6, OldWeekday: 3, OldStartClass: 5, OldEndClass: 6, NewWeek: 9, NewWeekday: 1, NewStartClass: 7, NewEndClass: 8, NewLocation: "旗山西1-206"},
+				{OldWeek: 10, OldWeekday: 3, OldStartClass: 5, OldEndClass: 6, NewWeek: 12, NewWeekday: 2, NewStartClass: 5, NewEndClass: 6, NewLocation: "旗山东3-101"},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "旗山西1-206", StartClass: 7, EndClass: 8, StartWeek: 9, EndWeek: 9, Weekday: 1, Single: true, Double: true, Adjust: true},
+				{Location: "旗山东3-101", StartClass: 5, EndClass: 6, StartWeek: 12, EndWeek: 12, Weekday: 2, Single: true, Double: true, Adjust: true},
+				{Location: "铜盘A110", StartClass: 5, EndClass: 6, StartWeek: 5, EndWeek: 5, Weekday: 3, Single: true, Double: true},
+				{Location: "铜盘A110", StartClass: 5, EndClass: 6, StartWeek: 7, EndWeek: 9, Weekday: 3, Single: true, Double: true},
+				{Location: "铜盘A110", StartClass: 5, EndClass: 6, StartWeek: 11, EndWeek: 18, Weekday: 3, Single: true, Double: true},
+			},
+		},
+		{
+			name: "NoMatchingAdjust",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 6, OldWeekday: 3, OldStartClass: 3, OldEndClass: 4, NewWeek: 9, NewWeekday: 1, NewStartClass: 7, NewEndClass: 8, NewLocation: "旗山西1-206"},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+			},
+		},
+		{
+			name: "MultipleScheduleRules",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+				{Location: "铜盘A508", StartClass: 7, EndClass: 8, StartWeek: 1, EndWeek: 16, Weekday: 5, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 4, OldWeekday: 5, OldStartClass: 7, OldEndClass: 8, NewWeek: 5, NewWeekday: 2, NewStartClass: 7, NewEndClass: 8, NewLocation: "旗山东3-101"},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+				{Location: "旗山东3-101", StartClass: 7, EndClass: 8, StartWeek: 5, EndWeek: 5, Weekday: 2, Single: true, Double: true, Adjust: true},
+				{Location: "铜盘A508", StartClass: 7, EndClass: 8, StartWeek: 1, EndWeek: 3, Weekday: 5, Single: true, Double: true},
+				{Location: "铜盘A508", StartClass: 7, EndClass: 8, StartWeek: 5, EndWeek: 16, Weekday: 5, Single: true, Double: true},
+			},
+		},
+		{
+			name: "ConsecutiveWeeksRemoved",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 10, Weekday: 3, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 5, OldWeekday: 3, OldStartClass: 1, OldEndClass: 2, NewWeek: 11, NewWeekday: 4, NewStartClass: 1, NewEndClass: 2, NewLocation: "旗山西1-206"},
+				{OldWeek: 6, OldWeekday: 3, OldStartClass: 1, OldEndClass: 2, NewWeek: 12, NewWeekday: 4, NewStartClass: 1, NewEndClass: 2, NewLocation: "旗山西1-206"},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "旗山西1-206", StartClass: 1, EndClass: 2, StartWeek: 11, EndWeek: 11, Weekday: 4, Single: true, Double: true, Adjust: true},
+				{Location: "旗山西1-206", StartClass: 1, EndClass: 2, StartWeek: 12, EndWeek: 12, Weekday: 4, Single: true, Double: true, Adjust: true},
+				{Location: "铜盘A110", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 4, Weekday: 3, Single: true, Double: true},
+				{Location: "铜盘A110", StartClass: 1, EndClass: 2, StartWeek: 7, EndWeek: 10, Weekday: 3, Single: true, Double: true},
+			},
+		},
+		{
+			name: "PreservesFromFullWeek",
+			rules: []CourseScheduleRule{
+				{Location: "", StartClass: 1, EndClass: 8, StartWeek: 3, EndWeek: 4, Weekday: 1, Single: true, Double: true, FromFullWeek: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 3, OldWeekday: 1, OldStartClass: 1, OldEndClass: 8, NewWeek: 5, NewWeekday: 1, NewStartClass: 1, NewEndClass: 8, NewLocation: ""},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "", StartClass: 1, EndClass: 8, StartWeek: 5, EndWeek: 5, Weekday: 1, Single: true, Double: true, Adjust: true},
+				{Location: "", StartClass: 1, EndClass: 8, StartWeek: 4, EndWeek: 4, Weekday: 1, Single: true, Double: true, FromFullWeek: true},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := ApplyAdjustRules(tc.rules, tc.adjusts)
+			if !reflect.DeepEqual(result, tc.expected) {
+				t.Errorf("result mismatch\ngot:      %+v\nexpected: %+v", result, tc.expected)
+			}
+		})
 	}
 }
