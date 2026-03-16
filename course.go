@@ -316,6 +316,11 @@ func ApplyAdjustRules(scheduleRules []CourseScheduleRule, adjustRules []CourseAd
 			// 记录被调课的周次，后续需要从原有规则中移除
 			removedWeeks = append(removedWeeks, adj.OldWeek)
 
+			// 如果课程被取消，则不需要添加新课程
+			if adj.Canceled {
+				continue
+			}
+
 			// 添加新的课程信息
 			result = append(result, CourseScheduleRule{
 				Location:     adj.NewLocation,

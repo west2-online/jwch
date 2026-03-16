@@ -108,6 +108,7 @@ type CourseAdjustRule struct {
 	OldStartClass int `json:"oldStartClass"` // 原-开始节数
 	OldEndClass   int `json:"oldEndClass"`   // 原-结束节数
 
+	Canceled      bool   `json:"canceled"`      // 是否取消
 	NewWeek       int    `json:"newWeek"`       // 新-周次
 	NewWeekday    int    `json:"newWeekday"`    // 新-星期几
 	NewStartClass int    `json:"newStartClass"` // 新-开始节数
