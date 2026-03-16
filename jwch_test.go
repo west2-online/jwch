@@ -454,6 +454,53 @@ func TestApplyAdjustRules(t *testing.T) {
 				{Location: "", StartClass: 1, EndClass: 8, StartWeek: 4, EndWeek: 4, Weekday: 1, Single: true, Double: true, FromFullWeek: true},
 			},
 		},
+		{
+			name: "CancelMiddleWeek",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 6, OldWeekday: 1, OldStartClass: 3, OldEndClass: 4, Canceled: true},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "铜盘A110", StartClass: 3, EndClass: 4, StartWeek: 1, EndWeek: 5, Weekday: 1, Single: true, Double: true},
+				{Location: "铜盘A110", StartClass: 3, EndClass: 4, StartWeek: 7, EndWeek: 16, Weekday: 1, Single: true, Double: true},
+			},
+		},
+		{
+			name: "CancelFirstWeek",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A401", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 5, Weekday: 1, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 1, OldWeekday: 1, OldStartClass: 1, OldEndClass: 2, Canceled: true},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "铜盘A401", StartClass: 1, EndClass: 2, StartWeek: 2, EndWeek: 5, Weekday: 1, Single: true, Double: true},
+			},
+		},
+		{
+			name: "CancelOnlyOneWeek",
+			rules: []CourseScheduleRule{
+				{Location: "铜盘A101", StartClass: 1, EndClass: 2, StartWeek: 5, EndWeek: 5, Weekday: 1, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 5, OldWeekday: 1, OldStartClass: 1, OldEndClass: 2, Canceled: true},
+			},
+			expected: []CourseScheduleRule{},
+		},
+		{
+			name: "CancelIrrelevantWeek",
+			rules: []CourseScheduleRule{
+				{Location: "旗山东3-101", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 5, Weekday: 1, Single: true, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 6, OldWeekday: 1, OldStartClass: 1, OldEndClass: 2, Canceled: true},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "旗山东3-101", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 5, Weekday: 1, Single: true, Double: true},
+			},
+		},
 	}
 
 	for _, tc := range cases {
