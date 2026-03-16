@@ -71,8 +71,8 @@ type Course struct {
 	ExamType              string                       `json:"examtype"`              // 考试类别
 	Teacher               string                       `json:"teacher"`               // 任课教师
 	ScheduleRules         []CourseScheduleRule         `json:"scheduleRules"`         // 上课时间地点规则
-	AdjustRules           []CourseAdjustRule           `json:"adjustRules"`           // 调课规则
 	FullWeekScheduleRules []CourseFullWeekScheduleRule `json:"fullWeekScheduleRules"` // 整周课程上课时间地点规则
+	AdjustRules           []CourseAdjustRule           `json:"adjustRules"`           // 调课规则
 	RawScheduleRules      string                       `json:"rawScheduleRules"`      // 上课时间地点（原始文本）
 	RawExamTime           string                       `json:"rawExamTime"`           // 考试时间地点（原始文本）
 	RawAdjust             string                       `json:"rawAdjust"`             // 调课信息（原始文本）
