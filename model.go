@@ -206,8 +206,8 @@ type NoticeInfo struct {
 	Title    string // 通知标题
 	URL      string // 通知链接
 	Date     string // 通知日期
-	WbTreeId string
-	WbNewsId string
+	WbTreeId string // 部门ID (1035: 综合科; 1036: 教学类型; 1037: 教研教改; 1038: 计划科; 1139: 实践科; 1140: 质量办; 1141: 电教中心; 1142: 教材中心; 1143: 铜盘校区管理科)
+	WbNewsId string // 新闻ID
 }
 
 type NoticeInfoReq struct {
@@ -215,8 +215,8 @@ type NoticeInfoReq struct {
 }
 
 type NoticeDetailReq struct {
-	WbTreeId string
-	WbNewsId string
+	WbTreeId string // 部门ID (1035: 综合科; 1036: 教学类型; 1037: 教研教改; 1038: 计划科; 1139: 实践科; 1140: 质量办; 1141: 电教中心; 1142: 教材中心; 1143: 铜盘校区管理科)
+	WbNewsId string // 新闻ID
 }
 
 type NoticeDetail struct {
