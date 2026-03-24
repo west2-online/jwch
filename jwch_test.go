@@ -309,7 +309,7 @@ func TestGetNoticeDetail(t *testing.T) {
 		t.Error(err)
 	}
 	if detail == nil {
-		t.Error("notice detail is nil")
+		t.Fatal("notice detail is nil")
 	}
 	fmt.Println("Title:", detail.Title)
 	fmt.Println("Date:", detail.Date)
