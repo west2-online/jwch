@@ -37,6 +37,12 @@ var (
 	stu     = NewStudent().WithUser(username, password)
 )
 
+// isCI returns true when running in a CI environment (e.g., GitHub Actions).
+// Sensitive output is suppressed in CI to avoid leaking personal data in logs.
+func isCI() bool {
+	return os.Getenv("CI") != "" || os.Getenv("GITHUB_ACTIONS") != ""
+}
+
 func login() error {
 	err := stu.Login()
 	if err != nil {
@@ -104,21 +110,25 @@ func Test_GetCourse(t *testing.T) {
 }
 
 func Test_GetInfo(t *testing.T) {
-	_, err := stu.GetInfo()
+	info, err := stu.GetInfo()
 	if err != nil {
 		t.Error(err)
 	}
 
-	// 不允许输出个人信息
+	if !isCI() {
+		fmt.Println(utils.PrintStruct(info))
+	}
 }
 
 func Test_GetMarks(t *testing.T) {
-	_, err := stu.GetMarks()
+	marks, err := stu.GetMarks()
 	if err != nil {
 		t.Error(err)
 	}
 
-	// 不允许输出成绩
+	if !isCI() {
+		fmt.Println(utils.PrintStruct(marks))
+	}
 }
 
 // 使用并发后似乎快了1s
@@ -133,7 +143,6 @@ func Test_GetQiShanEmptyRoom(t *testing.T) {
 		t.Error(err)
 	}
 
-	// 此处可以输出空教室信息
 	fmt.Println(utils.PrintStruct(rooms))
 }
 
@@ -148,7 +157,6 @@ func Test_GetJinJiangEmptyRoom(t *testing.T) {
 		t.Error(err)
 	}
 
-	// 此处可以输出空教室信息
 	fmt.Println(utils.PrintStruct(rooms))
 }
 
@@ -163,7 +171,6 @@ func Test_GetTongPanEmptyRoom(t *testing.T) {
 		t.Error(err)
 	}
 
-	// 此处可以输出空教室信息
 	fmt.Println(utils.PrintStruct(rooms))
 }
 
@@ -178,7 +185,6 @@ func Test_GetQuanGangEmptyRoom(t *testing.T) {
 		t.Error(err)
 	}
 
-	// 此处可以输出空教室信息
 	fmt.Println(utils.PrintStruct(rooms))
 }
 
@@ -193,7 +199,6 @@ func Test_GetYiShanEmptyRoom(t *testing.T) {
 		t.Error(err)
 	}
 
-	// 此处可以输出空教室信息
 	fmt.Println(utils.PrintStruct(rooms))
 }
 
@@ -208,7 +213,6 @@ func Test_GetXiaMenEmptyRoom(t *testing.T) {
 		t.Error(err)
 	}
 
-	// 此处可以输出空教室信息
 	fmt.Println(utils.PrintStruct(rooms))
 }
 
@@ -218,7 +222,6 @@ func Test_GetSchoolCalendar(t *testing.T) {
 		t.Error(err)
 	}
 
-	// 此处可以输出校历信息
 	fmt.Println(utils.PrintStruct(calendar))
 }
 
@@ -233,49 +236,59 @@ func Test_GetTermEvents(t *testing.T) {
 		t.Error(err)
 	}
 
-	// 此处可以输出学期信息
 	fmt.Println(utils.PrintStruct(events))
 }
 
 func Test_GetCredit(t *testing.T) {
-	_, err := stu.GetCredit()
+	credit, err := stu.GetCredit()
 	if err != nil {
 		t.Error(err)
 	}
 
-	// 不允许输出学分信息
+	if !isCI() {
+		fmt.Println(utils.PrintStruct(credit))
+	}
 }
 
 func Test_GetGPA(t *testing.T) {
-	_, err := stu.GetGPA()
+	gpa, err := stu.GetGPA()
 	if err != nil {
 		t.Error(err)
 	}
 
-	// 不允许输出 GPA 信息
+	if !isCI() {
+		fmt.Println(utils.PrintStruct(gpa))
+	}
 }
 
 func TestGetUnifiedExam(t *testing.T) {
-	_, err := stu.GetCET()
+	cet, err := stu.GetCET()
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = stu.GetJS()
+	js, err := stu.GetJS()
 	if err != nil {
 		t.Error(err)
 	}
 
-	// 不允许输出考试成绩信息
+	if !isCI() {
+		fmt.Println(utils.PrintStruct(cet))
+		fmt.Println(utils.PrintStruct(js))
+	}
 }
 
 // 考场信息
 func TestGetExamRoomInfo(t *testing.T) {
-	_, err := stu.GetExamRoom(ExamRoomReq{
+	rooms, err := stu.GetExamRoom(ExamRoomReq{
 		Term: "202401",
 	})
 	if err != nil {
 		t.Error(err)
+	}
+
+	if !isCI() {
+		fmt.Println(utils.PrintStruct(rooms))
 	}
 }
 
@@ -321,7 +334,10 @@ func TestGetCultivatePlan(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(url)
+
+	if !isCI() {
+		fmt.Println(url)
+	}
 }
 
 func TestGetLocateDate(t *testing.T) {
@@ -333,9 +349,13 @@ func TestGetLocateDate(t *testing.T) {
 }
 
 func TestGetLectures(t *testing.T) {
-	_, err := stu.GetLectures()
+	lectures, err := stu.GetLectures()
 	if err != nil {
 		t.Error(err)
+	}
+
+	if !isCI() {
+		fmt.Println(utils.PrintStruct(lectures))
 	}
 }
 
