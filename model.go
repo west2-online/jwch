@@ -203,13 +203,26 @@ type ExamRoomInfo struct {
 }
 
 type NoticeInfo struct {
-	Title string // 通知标题
-	URL   string // 通知链接
-	Date  string // 通知日期
+	Title    string // 通知标题
+	URL      string // 通知链接
+	Date     string // 通知日期
+	WbTreeId string
+	WbNewsId string
 }
 
 type NoticeInfoReq struct {
 	PageNum int // 获取第几页的数据，从 1 开始
+}
+
+type NoticeDetailReq struct {
+	WbTreeId string
+	WbNewsId string
+}
+
+type NoticeDetail struct {
+	NoticeInfo
+
+	Content string // 通知内容
 }
 
 // LocateDate 当前时间

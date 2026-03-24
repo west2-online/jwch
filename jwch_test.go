@@ -290,6 +290,32 @@ func TestGetNoticesInfo(t *testing.T) {
 	}
 }
 
+func TestGetNoticeDetail(t *testing.T) {
+	// 先获取通知列表
+	noticeList, _, err := stu.GetNoticeInfo(&NoticeInfoReq{PageNum: 1})
+	if err != nil {
+		t.Error(err)
+	}
+	if len(noticeList) == 0 {
+		t.Error("notice list is empty")
+	}
+
+	// 获取第一个通知的详情
+	detail, err := stu.GetNoticeDetail(&NoticeDetailReq{
+		WbTreeId: noticeList[0].WbTreeId,
+		WbNewsId: noticeList[0].WbNewsId,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	if detail == nil {
+		t.Error("notice detail is nil")
+	}
+	fmt.Println("Title:", detail.Title)
+	fmt.Println("Date:", detail.Date)
+	fmt.Println("Content:", detail.Content)
+}
+
 func TestGetCultivatePlan(t *testing.T) {
 	url, err := stu.GetCultivatePlan()
 	if err != nil {
