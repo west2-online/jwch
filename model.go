@@ -203,13 +203,26 @@ type ExamRoomInfo struct {
 }
 
 type NoticeInfo struct {
-	Title string // 通知标题
-	URL   string // 通知链接
-	Date  string // 通知日期
+	Title    string // 通知标题
+	URL      string // 通知链接
+	Date     string // 通知日期
+	WbTreeId string // 部门ID (1035: 综合科; 1036: 教学类型; 1037: 教研教改; 1038: 计划科; 1139: 实践科; 1140: 质量办; 1141: 电教中心; 1142: 教材中心; 1143: 铜盘校区管理科)
+	WbNewsId string // 新闻ID
 }
 
 type NoticeInfoReq struct {
 	PageNum int // 获取第几页的数据，从 1 开始
+}
+
+type NoticeDetailReq struct {
+	WbTreeId string // 部门ID (1035: 综合科; 1036: 教学类型; 1037: 教研教改; 1038: 计划科; 1139: 实践科; 1140: 质量办; 1141: 电教中心; 1142: 教材中心; 1143: 铜盘校区管理科)
+	WbNewsId string // 新闻ID
+}
+
+type NoticeDetail struct {
+	NoticeInfo
+
+	Content string // 通知内容
 }
 
 // LocateDate 当前时间
