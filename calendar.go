@@ -17,6 +17,7 @@ limitations under the License.
 package jwch
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -33,13 +34,22 @@ func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
 		return nil, err
 	}
 
-	rawCurTerm := htmlquery.InnerText(htmlquery.FindOne(resp, `//html/body/center/div`))
+	curTermNode := htmlquery.FindOne(resp, `//html/body/center/div`)
+	if curTermNode == nil {
+		return nil, fmt.Errorf("failed to find current term node")
+	}
+
+	rawCurTerm := htmlquery.InnerText(curTermNode)
 	rawCurTerm, err = utils.ConvertGB2312ToUTF8([]byte(rawCurTerm))
 	if err != nil {
 		return nil, err
 	}
 	curTermRegex := regexp.MustCompile(`当前学期：(\d{6})`)
-	curTerm := curTermRegex.FindStringSubmatch(rawCurTerm)[1]
+	curTermMatch := curTermRegex.FindStringSubmatch(rawCurTerm)
+	if len(curTermMatch) < 2 {
+		return nil, fmt.Errorf("failed to parse current term from school calendar page")
+	}
+	curTerm := curTermMatch[1]
 
 	res := &SchoolCalendar{
 		CurrentTerm: curTerm,
@@ -53,6 +63,9 @@ func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
 			break
 		}
 		rawTerm := htmlquery.SelectAttr(node, "value")
+		if len(rawTerm) < 22 {
+			continue
+		}
 		/*
 			2024012024082620250117
 			[0] 202401
