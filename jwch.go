@@ -110,7 +110,7 @@ func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 			if errRedirected != nil {
 				return nil, errno.CookieError
 			}
-			if strings.Contains(string(respRedirected.Body()), "请先对任课教师进行测评") {
+			if strings.Contains(string(respRedirected.Body()), "请先对任课教师和教材进行测评") {
 				return nil, errno.EvaluationNotFoundError
 			}
 		}
