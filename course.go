@@ -254,8 +254,8 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 		res = append(res, &Course{
 			Type:       htmlquery.OutputHTML(info[0], false),
 			Name:       htmlquery.OutputHTML(info[1], false),
-			Syllabus:   constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 0)),
-			LessonPlan: constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&`, safeExtractionValue(info[2], "a", "href", 1)),
+			Syllabus:   constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&id=`, safeExtractionValue(info[2], "a", "href", 0)),
+			LessonPlan: constants.JwchPrefix + safeExtractRegex(`javascript:pop1\('(.*?)&id=`, safeExtractionValue(info[2], "a", "href", 1)),
 			// PaymentStatus: safeExtractionFirst(info[3], "font"),
 			Credits:               safeExtractionFirst(info[4], "span"),
 			ElectiveType:          utils.GetChineseCharacter(htmlquery.OutputHTML(info[5], false)),
