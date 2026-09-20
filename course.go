@@ -313,6 +313,14 @@ func ApplyAdjustRules(scheduleRules []CourseScheduleRule, adjustRules []CourseAd
 				continue
 			}
 
+			// 单周课或双周课
+			if rule.Single != rule.Double {
+				isSingle := adj.OldWeek%2 == 1
+				if (rule.Single && !isSingle) || (rule.Double && isSingle) {
+					continue
+				}
+			}
+
 			// 记录被调课的周次，后续需要从原有规则中移除
 			removedWeeks = append(removedWeeks, adj.OldWeek)
 
