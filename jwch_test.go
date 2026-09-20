@@ -547,6 +547,42 @@ func TestApplyAdjustRules(t *testing.T) {
 				{Location: "旗山东3-101", StartClass: 1, EndClass: 2, StartWeek: 1, EndWeek: 5, Weekday: 1, Single: true, Double: true},
 			},
 		},
+		{
+			name: "SingleWeekRuleAdjustOnEvenWeek",
+			rules: []CourseScheduleRule{
+				{Location: "数计3-304", StartClass: 3, EndClass: 4, StartWeek: 5, EndWeek: 11, Weekday: 2, Single: true, Double: false},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 6, OldWeekday: 2, OldStartClass: 3, OldEndClass: 4, NewWeek: 3, NewWeekday: 7, NewStartClass: 3, NewEndClass: 4, NewLocation: "数计3-304"},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "数计3-304", StartClass: 3, EndClass: 4, StartWeek: 5, EndWeek: 11, Weekday: 2, Single: true, Double: false},
+			},
+		},
+		{
+			name: "DoubleWeekRuleAdjustOnOddWeek",
+			rules: []CourseScheduleRule{
+				{Location: "数计3-304", StartClass: 3, EndClass: 4, StartWeek: 6, EndWeek: 12, Weekday: 2, Single: false, Double: true},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 7, OldWeekday: 2, OldStartClass: 3, OldEndClass: 4, NewWeek: 3, NewWeekday: 7, NewStartClass: 3, NewEndClass: 4, NewLocation: "数计3-304"},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "数计3-304", StartClass: 3, EndClass: 4, StartWeek: 6, EndWeek: 12, Weekday: 2, Single: false, Double: true},
+			},
+		},
+		{
+			name: "SingleWeekRuleCancelEvenWeek",
+			rules: []CourseScheduleRule{
+				{Location: "数计3-304", StartClass: 3, EndClass: 4, StartWeek: 5, EndWeek: 11, Weekday: 2, Single: true, Double: false},
+			},
+			adjusts: []CourseAdjustRule{
+				{OldWeek: 6, OldWeekday: 2, OldStartClass: 3, OldEndClass: 4, Canceled: true},
+			},
+			expected: []CourseScheduleRule{
+				{Location: "数计3-304", StartClass: 3, EndClass: 4, StartWeek: 5, EndWeek: 11, Weekday: 2, Single: true, Double: false},
+			},
+		},
 	}
 
 	for _, tc := range cases {
