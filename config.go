@@ -19,9 +19,11 @@ package jwch
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/west2-online/jwch/constants"
@@ -62,14 +64,15 @@ func LoadConfigFromEnv() *Config {
 }
 
 // GetTunnelAddress 获取青果网络隧道地址
-func (c *Config) GetTunnelAddress() (string, error) {
+func (c *Config) GetTunnelAddress() ([]string, error) {
 	if !c.Proxy.Enabled || c.Proxy.AuthKey == "" || c.Proxy.AuthPwd == "" {
-		return "", fmt.Errorf("代理未启用或认证信息不完整")
+		return nil, fmt.Errorf("代理未启用或认证信息不完整")
 	}
 
 	// 1) 优先使用当前Config中已存在的代理地址
-	if c.Proxy.ProxyServer != "" {
-		return c.Proxy.ProxyServer, nil
+	if servers := validTunnelServers(c.Proxy.ProxyServers); len(servers) != 0 {
+		c.Proxy.ProxyServers = servers
+		return append([]string(nil), servers...), nil
 	}
 
 	client := &http.Client{}
@@ -87,33 +90,38 @@ func (c *Config) GetTunnelAddress() (string, error) {
 	// 发送GET请求
 	resp, err := client.Get(QingGuoTunnelURL + "?" + params.Encode())
 	if err != nil {
-		return "", errno.HTTPQueryError.WithMessage("获取隧道地址失败").WithErr(err)
+		return nil, errno.HTTPQueryError.WithMessage("获取隧道地址失败").WithErr(err)
 	}
 	defer resp.Body.Close()
 
 	var tunnelResp TunnelResponse
 	if err := json.NewDecoder(resp.Body).Decode(&tunnelResp); err != nil {
-		return "", errno.HTTPQueryError.WithMessage("解析隧道地址响应失败").WithErr(err)
+		return nil, errno.HTTPQueryError.WithMessage("解析隧道地址响应失败").WithErr(err)
 	}
 
 	if tunnelResp.Code != "SUCCESS" {
-		return "", fmt.Errorf("获取隧道地址失败，响应码: %s", tunnelResp.Code)
+		return nil, fmt.Errorf("获取隧道地址失败，响应码: %s", tunnelResp.Code)
 	}
 
 	// 检查是否有可用的隧道数据
 	if len(tunnelResp.Data) == 0 {
-		return "", fmt.Errorf("没有可用的隧道地址")
+		return nil, fmt.Errorf("没有可用的隧道地址")
 	}
 
-	// 使用第一个可用的隧道地址
-	tunnelServer := tunnelResp.Data[0].Server
-	if tunnelServer == "" {
-		return "", fmt.Errorf("隧道地址为空")
+	// 更新配置中的代理服务器地址，并过滤无效地址。
+	tunnelServers := make([]string, 0, len(tunnelResp.Data))
+
+	for _, server := range tunnelResp.Data {
+		if server := strings.TrimSpace(server.Server); server != "" {
+			tunnelServers = append(tunnelServers, server)
+		}
+	}
+	if len(tunnelServers) == 0 {
+		return nil, fmt.Errorf("没有可用的隧道地址")
 	}
 
-	// 更新配置中的代理服务器地址
-	c.Proxy.ProxyServer = tunnelServer
-	return tunnelServer, nil
+	c.Proxy.ProxyServers = tunnelServers
+	return append([]string(nil), tunnelServers...), nil
 }
 
 // GetProxyURL 根据青果网络文档生成代理URL
@@ -122,11 +130,31 @@ func (c *Config) GetProxyURL() (*url.URL, error) {
 		return nil, fmt.Errorf("代理未启用")
 	}
 
-	if c.Proxy.AuthKey == "" || c.Proxy.AuthPwd == "" || c.Proxy.ProxyServer == "" {
+	if c.Proxy.AuthKey == "" || c.Proxy.AuthPwd == "" {
 		return nil, fmt.Errorf("代理配置信息不完整")
 	}
 
-	// 普通模式：每次请求都自动切换IP
-	link := fmt.Sprintf("http://%s:%s@%s", c.Proxy.AuthKey, c.Proxy.AuthPwd, c.Proxy.ProxyServer)
-	return url.Parse(link)
+	servers := validTunnelServers(c.Proxy.ProxyServers)
+	if len(servers) == 0 {
+		return nil, fmt.Errorf("代理配置信息不完整")
+	}
+
+	// 负载均衡
+	server := servers[rand.Intn(len(servers))]
+	u := &url.URL{
+		Scheme: "http",
+		User:   url.UserPassword(c.Proxy.AuthKey, c.Proxy.AuthPwd),
+		Host:   server,
+	}
+	return u, nil
+}
+
+func validTunnelServers(servers []string) []string {
+	validServers := make([]string, 0, len(servers))
+	for _, server := range servers {
+		if server = strings.TrimSpace(server); server != "" {
+			validServers = append(validServers, server)
+		}
+	}
+	return validServers
 }
