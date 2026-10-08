@@ -248,6 +248,7 @@ type ProxyConfig struct {
 	AuthKey     string `json:"auth_key"`     // 青果网络认证密钥
 	AuthPwd     string `json:"auth_pwd"`     // 青果网络认证密码
 	ProxyServer string `json:"proxy_server"` // 代理服务器地址 (从隧道接口获取)
+	Shortterm   bool   `json:"shortterm"`    // 是否为短效代理
 	Enabled     bool   `json:"enabled"`      // 是否启用代理
 }
 
