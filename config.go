@@ -50,6 +50,9 @@ func LoadConfigFromEnv() *Config {
 		if authPwd := os.Getenv("QINGGUO_AUTH_PWD"); authPwd != "" {
 			globalConfig.Proxy.AuthPwd = authPwd
 		}
+		if shortterm := os.Getenv("QINGGUO_SHORTTERM"); shortterm == "true" {
+			globalConfig.Proxy.Shortterm = true
+		}
 		if enabled := os.Getenv("QINGGUO_PROXY_ENABLED"); enabled == "true" {
 			globalConfig.Proxy.Enabled = true
 		}
@@ -76,8 +79,13 @@ func (c *Config) GetTunnelAddress() (string, error) {
 	params.Set("key", c.Proxy.AuthKey)
 	params.Set("pwd", c.Proxy.AuthPwd)
 
+	QingGuoTunnelURL := constants.QingGuoLongtermTunnelURL
+	if c.Proxy.Shortterm {
+		QingGuoTunnelURL = constants.QingGuoShareTunnelURL
+	}
+
 	// 发送GET请求
-	resp, err := client.Get(constants.QingGuoTunnelURL + "?" + params.Encode())
+	resp, err := client.Get(QingGuoTunnelURL + "?" + params.Encode())
 	if err != nil {
 		return "", errno.HTTPQueryError.WithMessage("获取隧道地址失败").WithErr(err)
 	}
