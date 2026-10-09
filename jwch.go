@@ -44,8 +44,8 @@ func NewStudent() *Student {
 
 	// 如果启用了代理，先获取隧道地址再设置代理
 	if config.Proxy.Enabled {
-		_, err := config.GetTunnelAddress()
-		if err == nil && config.Proxy.ProxyServer != "" {
+		servers, err := config.GetTunnelAddress()
+		if err == nil && len(servers) != 0 {
 			proxyURL, err := config.GetProxyURL()
 			if err == nil {
 				transport.Proxy = http.ProxyURL(proxyURL)
