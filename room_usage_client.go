@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/antchfx/htmlquery"
+	"golang.org/x/net/html"
 
 	jwchconstants "github.com/west2-online/jwch/constants"
-	"golang.org/x/net/html"
 )
 
 const classroomUsageURL = "https://jwcjwxt2.fzu.edu.cn:81/kkgl/kbcx/kbcx_zb.aspx"
