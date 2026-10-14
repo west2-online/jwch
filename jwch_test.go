@@ -17,10 +17,12 @@ limitations under the License.
 package jwch
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/utils"
@@ -214,6 +216,37 @@ func Test_GetXiaMenEmptyRoom(t *testing.T) {
 	}
 
 	fmt.Println(utils.PrintStruct(rooms))
+}
+
+// Test_GetClassroomUsage 复用 TestMain 中已登录的学生，抓取当天各校区的教室占用并打印。
+func Test_GetClassroomUsage(t *testing.T) {
+	location, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		t.Fatal(err)
+	}
+	date := time.Now().In(location).Format(time.DateOnly)
+	for _, campus := range []string{"旗山校区", "晋江校区", "铜盘校区", "泉港校区", "怡山校区", "厦门工艺美院"} {
+		t.Run(campus, func(t *testing.T) {
+			usage, err := stu.GetClassroomUsage(context.Background(), ClassroomUsageReq{
+				Date: date, Campus: campus,
+			})
+			if err != nil {
+				t.Error(err)
+			}
+			fmt.Println(utils.PrintStruct(usage))
+		})
+	}
+}
+
+// Test_GetClassroomUsageBuilding 验证只抓指定教学楼的请求，便于检查单楼补抓结果。
+func Test_GetClassroomUsageBuilding(t *testing.T) {
+	usage, err := stu.GetClassroomUsage(context.Background(), ClassroomUsageReq{
+		Date: "2026-10-11", Campus: "旗山校区", Building: "第1学科群",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(utils.PrintStruct(usage))
 }
 
 func Test_GetSchoolCalendar(t *testing.T) {
