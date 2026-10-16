@@ -153,10 +153,10 @@ func (s *Student) getCultivatePlanWithFallback(info *StudentDetail, viewStateMap
 			"__EVENTARGUMENT":                     "",
 			"__VIEWSTATEGENERATOR":                viewStateGenerator,
 			"ctl00$njdpl":                         info.Grade,
-			"ctl00$dldpl":                         "<-全部->",
-			"ctl00$zymcdpl":                       "<-全部->",
+			"ctl00$dldpl":                         "【全部】",
+			"ctl00$zymcdpl":                       "【全部】",
 			"ctl00$zylbdpl":                       "本专业",
-			"ctl00$ContentPlaceHolder1$DDL_syxw":  "<-全部->",
+			"ctl00$ContentPlaceHolder1$DDL_syxw":  "【全部】",
 			"ctl00$ContentPlaceHolder1$BT_submit": "确定",
 		})
 	if err != nil {
