@@ -218,33 +218,27 @@ func Test_GetXiaMenEmptyRoom(t *testing.T) {
 	fmt.Println(utils.PrintStruct(rooms))
 }
 
-// Test_GetClassroomUsage 复用 TestMain 中已登录的学生，抓取当天各校区的教室占用并打印。
-func Test_GetClassroomUsage(t *testing.T) {
-	location, err := time.LoadLocation("Asia/Shanghai")
-	if err != nil {
-		t.Fatal(err)
-	}
-	date := time.Now().In(location).Format(time.DateOnly)
+// Test_GetClassroomBuildings 获取各校区当天的教学楼选项并打印，不抓取占用表。
+func Test_GetClassroomBuildings(t *testing.T) {
 	for _, campus := range []string{"旗山校区", "晋江校区", "铜盘校区", "泉港校区", "怡山校区", "厦门工艺美院"} {
 		t.Run(campus, func(t *testing.T) {
-			usage, err := stu.GetClassroomUsage(context.Background(), ClassroomUsageReq{
-				Date: date, Campus: campus,
-			})
+			buildings, err := stu.GetClassroomBuildings(context.Background(), campus)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
-			fmt.Println(utils.PrintStruct(usage))
+			fmt.Println(utils.PrintStruct(buildings))
 		})
 	}
 }
 
-// Test_GetClassroomUsageBuilding 验证只抓指定教学楼的请求，便于检查单楼补抓结果。
-func Test_GetClassroomUsageBuilding(t *testing.T) {
+// Test_GetClassroomUsage 只查询指定教学楼当天的教室占用并打印。
+func Test_GetClassroomUsage(t *testing.T) {
+	location := time.FixedZone("Asia/Shanghai", 8*60*60)
 	usage, err := stu.GetClassroomUsage(context.Background(), ClassroomUsageReq{
-		Date: "2026-10-11", Campus: "旗山校区", Building: "第1学科群",
+		Date: time.Now().In(location).Format(time.DateOnly), Campus: "旗山校区", Building: "第1学科群",
 	})
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	fmt.Println(utils.PrintStruct(usage))
 }

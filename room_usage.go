@@ -32,174 +32,138 @@ const classroomUsageURL = "https://jwcjwxt2.fzu.edu.cn:81/kkgl/kbcx/kbcx_zb.aspx
 // 每次教室查询 GET/POST 前等待 200 毫秒，降低连续请求对教务处的压力。
 const classroomUsageRequestDelay = 200 * time.Millisecond
 
-func (e *ClassroomUsageError) Error() string {
-	return fmt.Sprintf("classroom usage failed for %s buildings %s: %v", e.Campus, strings.Join(e.FailedBuildings, ", "), e.Cause)
+// GetClassroomBuildings 获取指定校区的全部教学楼选项值，日期使用北京时间当天。
+// 这里只读取联动下拉框，不查询各教学楼的占用表。
+func (s *Student) GetClassroomBuildings(ctx context.Context, campus string) ([]string, error) {
+	location := time.FixedZone("Asia/Shanghai", 8*60*60)
+	date := time.Now().In(location).Format(time.DateOnly)
+	doc, _, err := s.classroomUsagePage(ctx, date, "", campus)
+	if err != nil {
+		return nil, err
+	}
+	buildings := make([]string, 0)
+	seen := make(map[string]bool)
+	for _, option := range htmlquery.Find(doc, "//*[@id='jxldpl']/option") {
+		building := htmlquery.SelectAttr(option, "value")
+		if building != "" && !seen[building] {
+			buildings = append(buildings, building)
+			seen[building] = true
+		}
+	}
+	if len(buildings) == 0 {
+		return nil, fmt.Errorf("classroom usage page has no buildings for %s", campus)
+	}
+	return buildings, nil
 }
 
-func (e *ClassroomUsageError) Unwrap() error { return e.Cause }
-
-// GetClassroomUsage 复用学生已有鉴权，按教学楼抓取占用表，
-// 无需再遍历教室类型或查询节次组合。
+// GetClassroomUsage 查询指定教学楼
+// Term 可省略，默认使用教务处当前学年学期，查询仍以 Date 为单位。
 func (s *Student) GetClassroomUsage(ctx context.Context, req ClassroomUsageReq) (*ClassroomUsage, error) {
-	term, rooms, err := fetchClassroomUsage(ctx, s, req.Date, req.Term, req.Campus, req.Building)
-	usage := &ClassroomUsage{Date: req.Date, Term: term, Rooms: rooms}
+	if strings.TrimSpace(req.Building) == "" {
+		return nil, fmt.Errorf("classroom building is required")
+	}
+	date, err := time.Parse(time.DateOnly, req.Date)
 	if err != nil {
-		return usage, err
+		return nil, fmt.Errorf("invalid classroom date: %w", err)
+	}
+	doc, term, err := s.classroomUsagePage(ctx, req.Date, req.Term, req.Campus)
+	if err != nil {
+		return nil, err
+	}
+	found := false
+	for _, option := range htmlquery.Find(doc, "//*[@id='jxldpl']/option") {
+		if htmlquery.SelectAttr(option, "value") == req.Building {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, fmt.Errorf("classroom usage page has no building %s for %s", req.Building, req.Campus)
+	}
+	doc, err = postSelection(ctx, s, doc, req.Date, term, req.Campus, req.Building, "ctl00$jxldpl")
+	if err != nil {
+		return nil, fmt.Errorf("select building %s: %w", req.Building, err)
+	}
+	if selectedValue(doc, "xnxqdpl") != term || selectedValue(doc, "xqdpl") != req.Campus ||
+		selectedValue(doc, "jxldpl") != req.Building {
+		return nil, fmt.Errorf("classroom usage page did not select building %s", req.Building)
+	}
+	selector := htmlquery.FindOne(doc, "//*[@id='jsdpl']")
+	if selector == nil {
+		return nil, fmt.Errorf("classroom usage page has no room selector for %s", req.Building)
+	}
+	usage := &ClassroomUsage{Date: req.Date, Term: term, Rooms: make([]*ClassroomUsageRoom, 0)}
+	hasRooms := false
+	for _, option := range htmlquery.Find(selector, "./option") {
+		if htmlquery.SelectAttr(option, "value") != "" {
+			hasRooms = true
+			break
+		}
+	}
+	if !hasRooms {
+		return usage, nil
+	}
+	form, err := queryForm(doc, req.Date, term, req.Campus, req.Building)
+	if err != nil {
+		return nil, err
+	}
+	form["ctl00$ContentPlaceHolder1$BT_search"] = "查询"
+	if err := waitForClassroomUsageRequest(ctx); err != nil {
+		return nil, err
+	}
+	doc, err = s.PostWithIdentifier(classroomUsageURL, form)
+	if err != nil {
+		return nil, fmt.Errorf("query building %s: %w", req.Building, err)
+	}
+	if selectedValue(doc, "xnxqdpl") != term || selectedValue(doc, "xqdpl") != req.Campus ||
+		selectedValue(doc, "jxldpl") != req.Building || inputValue(doc, "TB_rq") != req.Date {
+		return nil, fmt.Errorf("classroom usage response does not match query for %s", req.Building)
+	}
+	usage.Rooms, err = parseClassroomUsage(doc, date.Weekday())
+	if err != nil {
+		return nil, fmt.Errorf("parse building %s: %w", req.Building, err)
+	}
+	for _, room := range usage.Rooms {
+		room.Building = req.Building
 	}
 	return usage, nil
 }
 
-// fetchClassroomUsage 按日期遍历校区内的教学楼，查询每栋楼的教室占用表。
-// 切换校区和教学楼时先回发选择事件，取得联动下拉框及最新页面状态。
-func fetchClassroomUsage(ctx context.Context, s *Student, date, requestedTerm, campus, requestedBuilding string) (string, []*ClassroomUsageRoom, error) {
-	queryDate, err := time.Parse(time.DateOnly, date)
-	if err != nil {
-		return "", nil, fmt.Errorf("invalid classroom date: %w", err)
+// classroomUsagePage 准备查询表单，复用现有鉴权，并取得目标学期和校区的联动选项。
+func (s *Student) classroomUsagePage(ctx context.Context, date, requestedTerm, campus string) (*html.Node, string, error) {
+	if strings.TrimSpace(campus) == "" {
+		return nil, "", fmt.Errorf("classroom campus is required")
 	}
 	if err := waitForClassroomUsageRequest(ctx); err != nil {
-		return "", nil, err
+		return nil, "", err
 	}
 	doc, err := s.GetWithIdentifier(classroomUsageURL)
 	if err != nil {
-		return "", nil, err
+		return nil, "", err
 	}
 	term := requestedTerm
 	if term == "" {
 		term = selectedValue(doc, "xnxqdpl")
 	}
 	if term == "" {
-		return "", nil, fmt.Errorf("classroom usage page has no selected academic term")
+		return nil, "", fmt.Errorf("classroom usage page has no selected academic term")
 	}
-	if selectedValue(doc, "xqdpl") != campus {
+	if selectedValue(doc, "xnxqdpl") != term {
+		doc, err = postSelection(ctx, s, doc, date, term, selectedValue(doc, "xqdpl"), "", "ctl00$xnxqdpl")
+		if err != nil {
+			return nil, "", err
+		}
+	}
+	if selectedValue(doc, "xqdpl") != campus || inputValue(doc, "TB_rq") != date {
 		doc, err = postSelection(ctx, s, doc, date, term, campus, "", "ctl00$xqdpl")
 		if err != nil {
-			return "", nil, fmt.Errorf("select campus %s: %w", campus, err)
+			return nil, "", fmt.Errorf("select campus %s: %w", campus, err)
 		}
 	}
-	if selectedValue(doc, "xqdpl") != campus {
-		return "", nil, fmt.Errorf("classroom usage page did not select campus %s", campus)
+	if selectedValue(doc, "xqdpl") != campus || selectedValue(doc, "xnxqdpl") != term {
+		return nil, "", fmt.Errorf("classroom usage page did not select term %s campus %s", term, campus)
 	}
-	var buildings []string
-	for _, option := range htmlquery.Find(doc, "//*[@id='jxldpl']/option") {
-		if building := htmlquery.SelectAttr(option, "value"); building != "" {
-			buildings = append(buildings, building)
-		}
-	}
-	if len(buildings) == 0 {
-		return "", nil, fmt.Errorf("classroom usage page has no buildings for %s", campus)
-	}
-	rooms := make([]*ClassroomUsageRoom, 0)
-	seen := make(map[string]bool)
-	if requestedBuilding != "" {
-		found := false
-		for _, building := range buildings {
-			if building == requestedBuilding {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return term, nil, fmt.Errorf("classroom usage page has no building %s for %s", requestedBuilding, campus)
-		}
-		buildings = []string{requestedBuilding}
-	}
-	failedBuildings := make([]string, 0)
-	failedSet := make(map[string]bool)
-	var firstFailure error
-	markFailed := func(building string, cause error) {
-		if !failedSet[building] {
-			failedBuildings = append(failedBuildings, building)
-			failedSet[building] = true
-		}
-		if firstFailure == nil {
-			firstFailure = cause
-		}
-	}
-	for _, building := range buildings {
-		buildingDoc, buildingErr := postSelection(ctx, s, doc, date, term, campus, building, "ctl00$jxldpl")
-		if buildingErr != nil {
-			markFailed(building, fmt.Errorf("select building %s: %w", building, buildingErr))
-			continue
-		}
-		doc = buildingDoc
-		var err error
-		if selectedValue(doc, "xnxqdpl") != term || selectedValue(doc, "xqdpl") != campus || selectedValue(doc, "jxldpl") != building {
-			err = fmt.Errorf("classroom usage page did not select building %s: got term=%q campus=%q building=%q",
-				building, selectedValue(doc, "xnxqdpl"), selectedValue(doc, "xqdpl"), selectedValue(doc, "jxldpl"))
-		}
-		if err != nil {
-			markFailed(building, err)
-			continue
-		}
-		roomOptions := htmlquery.FindOne(doc, "//*[@id='jsdpl']")
-		if roomOptions == nil {
-			markFailed(building, fmt.Errorf("classroom usage page has no room selector for %s", building))
-			continue
-		}
-		hasRooms := false
-		for _, option := range htmlquery.Find(roomOptions, "./option") {
-			if htmlquery.SelectAttr(option, "value") != "" {
-				hasRooms = true
-				break
-			}
-		}
-		if !hasRooms {
-			continue
-		}
-		form, err := queryForm(doc, date, term, campus, building)
-		if err != nil {
-			markFailed(building, fmt.Errorf("prepare building %s: %w", building, err))
-			continue
-		}
-		form["ctl00$ContentPlaceHolder1$BT_search"] = "查询"
-		if err := waitForClassroomUsageRequest(ctx); err != nil {
-			return term, rooms, err
-		}
-		buildingDoc, err = s.PostWithIdentifier(classroomUsageURL, form)
-		if err != nil {
-			markFailed(building, fmt.Errorf("query building %s: %w", building, err))
-			continue
-		}
-		doc = buildingDoc
-		if selectedValue(doc, "xnxqdpl") != term || selectedValue(doc, "xqdpl") != campus ||
-			selectedValue(doc, "jxldpl") != building || inputValue(doc, "TB_rq") != date {
-			markFailed(building, fmt.Errorf("classroom usage response does not match query for %s: got date=%q term=%q campus=%q building=%q",
-				building, inputValue(doc, "TB_rq"), selectedValue(doc, "xnxqdpl"), selectedValue(doc, "xqdpl"), selectedValue(doc, "jxldpl")))
-			continue
-		}
-		buildingRooms, err := parseClassroomUsage(doc, queryDate.Weekday())
-		if err != nil {
-			markFailed(building, fmt.Errorf("parse building %s: %w", building, err))
-			continue
-		}
-		// 先完整校验当前楼的数据，再追加到总结果，避免重复教室导致半栋楼数据混入快照。
-		buildingSeen := make(map[string]bool, len(buildingRooms))
-		duplicate := ""
-		invalidRoom := false
-		for _, room := range buildingRooms {
-			if room == nil || room.Location == "" || seen[room.Location] || buildingSeen[room.Location] {
-				if room != nil {
-					duplicate = room.Location
-				}
-				invalidRoom = true
-				break
-			}
-			buildingSeen[room.Location] = true
-		}
-		if invalidRoom {
-			markFailed(building, fmt.Errorf("duplicate or invalid classroom %s in campus %s", duplicate, campus))
-			continue
-		}
-		for _, room := range buildingRooms {
-			seen[room.Location] = true
-			room.Building = building
-			rooms = append(rooms, room)
-		}
-	}
-	if len(failedBuildings) > 0 {
-		return term, rooms, &ClassroomUsageError{Campus: campus, FailedBuildings: failedBuildings, Cause: firstFailure}
-	}
-	return term, rooms, nil
+	return doc, term, nil
 }
 
 func postSelection(ctx context.Context, s *Student, doc *html.Node,

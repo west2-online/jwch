@@ -140,20 +140,13 @@ type EmptyRoomReq struct {
 	Building string `form:"build" binding:"required"` // 教学楼名
 }
 
-// ClassroomUsageReq 查询指定日期和校区内所有教学楼的教室占用情况。
+// ClassroomUsageReq 查询指定日期、校区和教学楼的教室占用情况。
 // Term 可省略，默认使用教务处页面当前选中的学年学期。
 type ClassroomUsageReq struct {
 	Date     string
 	Campus   string
 	Term     string
-	Building string // 可选；为空时查询校区内全部教学楼。
-}
-
-// ClassroomUsageError 表示部分教学楼抓取失败，但其他教学楼可能已有结果。
-type ClassroomUsageError struct {
-	Campus          string
-	FailedBuildings []string
-	Cause           error
+	Building string
 }
 
 type ClassroomUsage struct {
