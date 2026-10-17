@@ -140,6 +140,40 @@ type EmptyRoomReq struct {
 	Building string `form:"build" binding:"required"` // 教学楼名
 }
 
+// ClassroomUsageReq 查询指定日期、校区和教学楼的教室占用情况。
+// Term 可省略，默认使用教务处页面当前选中的学年学期。
+type ClassroomUsageReq struct {
+	Date     string
+	Campus   string
+	Term     string
+	Building string
+}
+
+type ClassroomUsage struct {
+	Date  string                `json:"date"`
+	Term  string                `json:"term"`
+	Rooms []*ClassroomUsageRoom `json:"rooms"`
+}
+
+type ClassroomUsageRoom struct {
+	Building    string                     `json:"building"`
+	Location    string                     `json:"location"`
+	Capacity    string                     `json:"capacity"`
+	Type        string                     `json:"type"`
+	Occupancies []*ClassroomUsageOccupancy `json:"occupancies"`
+}
+
+// Reason、Detail 分别保留教务处的课程或活动名称、班级或使用单位。
+// RawText 还保留原始周次标注；页面已按 Date 筛选，
+// 无需再根据周次推算课程是否发生在查询日期。
+type ClassroomUsageOccupancy struct {
+	Start   int32  `json:"start"`
+	End     int32  `json:"end"`
+	Reason  string `json:"reason"`
+	Detail  string `json:"detail"`
+	RawText string `json:"raw_text"`
+}
+
 // 校历
 type SchoolCalendar struct {
 	CurrentTerm string    `json:"currentTerm"` // 当前学期

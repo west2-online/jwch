@@ -17,10 +17,12 @@ limitations under the License.
 package jwch
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/utils"
@@ -214,6 +216,31 @@ func Test_GetXiaMenEmptyRoom(t *testing.T) {
 	}
 
 	fmt.Println(utils.PrintStruct(rooms))
+}
+
+// Test_GetClassroomBuildings 获取各校区当天的教学楼选项并打印，不抓取占用表。
+func Test_GetClassroomBuildings(t *testing.T) {
+	for _, campus := range []string{"旗山校区", "晋江校区", "铜盘校区", "泉港校区", "怡山校区", "厦门工艺美院"} {
+		t.Run(campus, func(t *testing.T) {
+			buildings, err := stu.GetClassroomBuildings(context.Background(), campus)
+			if err != nil {
+				t.Fatal(err)
+			}
+			fmt.Println(utils.PrintStruct(buildings))
+		})
+	}
+}
+
+// Test_GetClassroomUsage 只查询指定教学楼当天的教室占用并打印。
+func Test_GetClassroomUsage(t *testing.T) {
+	location := time.FixedZone("Asia/Shanghai", 8*60*60)
+	usage, err := stu.GetClassroomUsage(context.Background(), ClassroomUsageReq{
+		Date: time.Now().In(location).Format(time.DateOnly), Campus: "旗山校区", Building: "第1学科群",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(utils.PrintStruct(usage))
 }
 
 func Test_GetSchoolCalendar(t *testing.T) {
