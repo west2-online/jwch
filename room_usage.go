@@ -31,12 +31,21 @@ import (
 
 const classroomUsageURL = "https://jwcjwxt2.fzu.edu.cn:81/kkgl/kbcx/kbcx_zb.aspx"
 
+type classroomUsagePageState struct {
+	document  *html.Node
+	term      string
+	buildings []string
+}
+
 // GetClassroomBuildings 获取指定校区的全部教学楼列表
 func (s *Student) GetClassroomBuildings(ctx context.Context, campus string) ([]string, error) {
 	location := time.FixedZone("Asia/Shanghai", 8*60*60)
 	date := time.Now().In(location).Format(time.DateOnly)
-	_, _, buildings, err := s.classroomUsagePage(ctx, date, "", campus)
-	return buildings, err
+	page, err := s.classroomUsagePage(ctx, date, "", campus)
+	if err != nil {
+		return nil, err
+	}
+	return page.buildings, nil
 }
 
 // GetClassroomUsage 查询每个教学楼的教室使用总表
@@ -50,10 +59,13 @@ func (s *Student) GetClassroomUsage(ctx context.Context, req ClassroomUsageReq) 
 			return nil, fmt.Errorf("classroom building is required")
 		}
 	}
-	doc, term, available, err := s.classroomUsagePage(ctx, req.Date, req.Term, req.Campus)
+	page, err := s.classroomUsagePage(ctx, req.Date, req.Term, req.Campus)
 	if err != nil {
 		return nil, err
 	}
+	doc := page.document
+	term := page.term
+	available := page.buildings
 	buildings := req.Buildings
 	if len(buildings) == 0 {
 		buildings = available
@@ -116,38 +128,40 @@ func (s *Student) GetClassroomUsage(ctx context.Context, req ClassroomUsageReq) 
 	return usage, nil
 }
 
-func (s *Student) classroomUsagePage(ctx context.Context, date, requestedTerm, campus string) (*html.Node, string, []string, error) {
+func (s *Student) classroomUsagePage(ctx context.Context, date, requestedTerm, campus string) (*classroomUsagePageState, error) {
 	if strings.TrimSpace(campus) == "" {
-		return nil, "", nil, fmt.Errorf("classroom campus is required")
+		return nil, fmt.Errorf("classroom campus is required")
 	}
 	if err := s.waitForRequest(ctx); err != nil {
-		return nil, "", nil, err
+		return nil, err
 	}
 	doc, err := s.GetWithIdentifier(classroomUsageURL)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, err
 	}
 	term := requestedTerm
 	if term == "" {
 		term = selectedValue(doc, "xnxqdpl")
 	}
 	if term == "" {
-		return nil, "", nil, fmt.Errorf("classroom usage page has no selected academic term")
+		return nil, fmt.Errorf("classroom usage page has no selected academic term")
 	}
 	if selectedValue(doc, "xnxqdpl") != term {
 		doc, err = s.postClassroomUsage(ctx, doc, date, term, selectedValue(doc, "xqdpl"), "", "ctl00$xnxqdpl")
 		if err != nil {
-			return nil, "", nil, err
+			return nil, err
 		}
 	}
 	if selectedValue(doc, "xqdpl") != campus || safeExtractionValue(doc, "//*[@id='TB_rq']", "value", 0) != date {
 		doc, err = s.postClassroomUsage(ctx, doc, date, term, campus, "", "ctl00$xqdpl")
 		if err != nil {
-			return nil, "", nil, fmt.Errorf("select campus %s: %w", campus, err)
+			return nil, fmt.Errorf("select campus %s: %w", campus, err)
 		}
 	}
-	if selectedValue(doc, "xqdpl") != campus || selectedValue(doc, "xnxqdpl") != term {
-		return nil, "", nil, fmt.Errorf("classroom usage page did not select term %s campus %s", term, campus)
+	if selectedValue(doc, "xqdpl") != campus ||
+		selectedValue(doc, "xnxqdpl") != term ||
+		safeExtractionValue(doc, "//*[@id='TB_rq']", "value", 0) != date {
+		return nil, fmt.Errorf("classroom usage page did not select date %s, term %s, campus %s", date, term, campus)
 	}
 	buildings := make([]string, 0)
 	seen := make(map[string]bool)
@@ -159,9 +173,13 @@ func (s *Student) classroomUsagePage(ctx context.Context, date, requestedTerm, c
 		}
 	}
 	if len(buildings) == 0 {
-		return nil, "", nil, fmt.Errorf("classroom usage page has no buildings for %s", campus)
+		return nil, fmt.Errorf("classroom usage page has no buildings for %s", campus)
 	}
-	return doc, term, buildings, nil
+	return &classroomUsagePageState{
+		document:  doc,
+		term:      term,
+		buildings: buildings,
+	}, nil
 }
 
 func (s *Student) postClassroomUsage(ctx context.Context, doc *html.Node, date, term, campus, building, target string) (*html.Node, error) {
