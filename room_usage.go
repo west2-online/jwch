@@ -19,6 +19,7 @@ package jwch
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -30,6 +31,8 @@ import (
 )
 
 const classroomUsageURL = "https://jwcjwxt2.fzu.edu.cn:81/kkgl/kbcx/kbcx_zb.aspx"
+
+var classroomUsageWeekRangePattern = regexp.MustCompile(`\((\d{1,2})-(\d{1,2})\)$`)
 
 type classroomUsagePageState struct {
 	document  *html.Node
@@ -216,6 +219,22 @@ func (s *Student) postClassroomUsage(ctx context.Context, doc *html.Node, date, 
 	return doc, err
 }
 
+func parseClassroomUsageReason(rawText, reason string) (string, int32, int32) {
+	matches := classroomUsageWeekRangePattern.FindStringSubmatch(rawText)
+	if len(matches) != 3 {
+		return reason, 0, 0
+	}
+	startWeek, err := strconv.ParseInt(matches[1], 10, 32)
+	if err != nil {
+		return reason, 0, 0
+	}
+	endWeek, err := strconv.ParseInt(matches[2], 10, 32)
+	if err != nil {
+		return reason, 0, 0
+	}
+	return strings.TrimSpace(strings.TrimSuffix(reason, matches[0])), int32(startWeek), int32(endWeek)
+}
+
 const (
 	sectionsPerDay = 11
 	daysPerWeek    = 7
@@ -356,8 +375,14 @@ func parseClassroomUsage(doc *html.Node, weekday time.Weekday) ([]*ClassroomUsag
 				if reason == "" {
 					reason = detail
 				}
+				reason, startWeek, endWeek := parseClassroomUsageReason(raw, reason)
+				// 一个小兜底，教务处的week信息有点乱，如果解析出错就直接传rawtext
+				if startWeek == 0 || endWeek == 0 {
+					reason = raw
+				}
 				previous = &ClassroomUsageOccupancy{
-					Start: int32(section), End: int32(section), Reason: reason, Detail: detail, RawText: raw,
+					Start: int32(section), End: int32(section), StartWeek: startWeek, EndWeek: endWeek,
+					Reason: reason, Detail: detail, RawText: raw,
 				}
 				room.Occupancies = append(room.Occupancies, previous)
 			}

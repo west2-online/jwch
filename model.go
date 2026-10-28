@@ -170,11 +170,13 @@ type ClassroomUsageRoom struct {
 // RawText 还保留原始周次标注；页面已按 Date 筛选，
 // 无需再根据周次推算课程是否发生在查询日期。
 type ClassroomUsageOccupancy struct {
-	Start   int32  `json:"start"`
-	End     int32  `json:"end"`
-	Reason  string `json:"reason"`
-	Detail  string `json:"detail"`
-	RawText string `json:"raw_text"`
+	Start     int32  `json:"start"`
+	End       int32  `json:"end"`
+	StartWeek int32  `json:"start_week"`
+	EndWeek   int32  `json:"end_week"`
+	Reason    string `json:"reason"`
+	Detail    string `json:"detail"`
+	RawText   string `json:"raw_text"`
 }
 
 // 校历
