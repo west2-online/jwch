@@ -18,10 +18,12 @@ package jwch
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/errno"
@@ -30,6 +32,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"golang.org/x/net/html"
 )
+
+const defaultRequestDelay = 200 * time.Millisecond
 
 func NewStudent() *Student {
 	// 从环境变量加载配置
@@ -58,7 +62,32 @@ func NewStudent() *Student {
 		SetRedirectPolicy(resty.NoRedirectPolicy())
 
 	return &Student{
-		client: client,
+		client:       client,
+		requestDelay: defaultRequestDelay,
+	}
+}
+
+// WithRequestDelay 设置请求前的等待时间，等于 0 时不等待
+func (s *Student) WithRequestDelay(delay time.Duration) *Student {
+	s.requestDelay = max(delay, 0)
+	return s
+}
+
+// waitForRequest 等待配置的请求间隔，并在上下文取消时提前返回。
+func (s *Student) waitForRequest(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if s.requestDelay <= 0 {
+		return nil
+	}
+	timer := time.NewTimer(s.requestDelay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return ctx.Err()
 	}
 }
 

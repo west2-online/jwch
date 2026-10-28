@@ -17,10 +17,14 @@ limitations under the License.
 package jwch
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
+
+	"github.com/west2-online/jwch/utils"
 )
 
 // Safely extract data from html node by expression
@@ -47,6 +51,23 @@ func safeExtractionValue(node *html.Node, expr string, value string, index int) 
 	}
 
 	return htmlquery.SelectAttr(res[index], value)
+}
+
+// selectedValue returns the selected option value, or the first option value if none is selected.
+func selectedValue(node *html.Node, id string) string {
+	expr := fmt.Sprintf("//*[@id='%s']/option", id)
+	if selected := htmlquery.FindOne(node, expr+"[@selected]"); selected != nil {
+		return htmlquery.SelectAttr(selected, "value")
+	}
+	return safeExtractionValue(node, expr, "value", 0)
+}
+
+// normalizedHTMLText extracts text while treating line breaks as whitespace.
+func normalizedHTMLText(node *html.Node) string {
+	if node == nil {
+		return ""
+	}
+	return strings.Join(strings.Fields(utils.InnerTextWithBr(node)), " ")
 }
 
 // Safely extract data by regex
