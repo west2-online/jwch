@@ -250,6 +250,8 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 			}
 		}
 
+		rawExamTime := strings.TrimSpace(htmlquery.InnerText(info[9]))
+
 		// TODO: performance optimization
 		res = append(res, &Course{
 			Type:       htmlquery.OutputHTML(info[0], false),
@@ -265,7 +267,8 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 			AdjustRules:           adjustRules,
 			FullWeekScheduleRules: fullWeekScheduleRules,
 			RawScheduleRules:      strings.Join(courseInfo8, "\n"),
-			RawExamTime:           strings.TrimSpace(htmlquery.InnerText(info[9])),
+			RawExamTime:           rawExamTime,
+			ExamTime:              parseExamTime(rawExamTime),
 			RawAdjust:             strings.Join(courseInfo11, "\n"),
 			Remark:                htmlquery.OutputHTML(info[10], false),
 		})
@@ -391,4 +394,31 @@ func ApplyAdjustRules(scheduleRules []CourseScheduleRule, adjustRules []CourseAd
 	}
 
 	return result
+}
+
+// examTimePattern 匹配「学期选课」页面考试时间地点列的文本。
+// 实际格式中日期、时间、地点直接相连，例如：
+// 2026年06月26日14:00-18:00旗山东3-106。
+var examTimePattern = regexp.MustCompile(`^(\d{4}年\d{1,2}月\d{1,2}日)\s*(\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2})\s*(.*)$`)
+
+// parseExamTime 解析考试时间地点列。
+func parseExamTime(raw string) ExamTime {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ExamTime{
+			Location: "暂无考场数据",
+			Date:     "",
+			Time:     "",
+		}
+	}
+
+	matches := examTimePattern.FindStringSubmatch(raw)
+	if matches == nil {
+		return ExamTime{}
+	}
+	return ExamTime{
+		Date:     matches[1],
+		Time:     strings.ReplaceAll(matches[2], " ", ""),
+		Location: strings.TrimSpace(matches[3]),
+	}
 }
