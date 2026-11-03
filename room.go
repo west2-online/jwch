@@ -23,6 +23,7 @@ import (
 	"golang.org/x/net/html"
 
 	"github.com/west2-online/jwch/constants"
+	"github.com/west2-online/jwch/errno"
 )
 
 func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
@@ -267,66 +268,59 @@ func parseEmptyRoom(doc *html.Node) ([]string, error) {
 }
 
 // 考场查询
+// 与「我的选课」使用同一个数据源，但只解析考场需要的四列，避免完整解析课表。
 func (s *Student) GetExamRoom(req ExamRoomReq) ([]*ExamRoomInfo, error) {
-	viewStateMap, err := s.getState(constants.ExamRoomQueryURL)
+	state, err := s.getState(constants.CourseURL)
 	if err != nil {
 		return nil, err
 	}
-	res, err := s.PostWithIdentifier(constants.ExamRoomQueryURL, map[string]string{
-		"__VIEWSTATE":                         viewStateMap["VIEWSTATE"],
-		"__EVENTVALIDATION":                   viewStateMap["EVENTVALIDATION"],
+
+	resp, err := s.PostWithIdentifier(constants.CourseURL, map[string]string{
 		"ctl00$ContentPlaceHolder1$DDL_xnxq":  req.Term,
 		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
+		"__VIEWSTATE":                         state["VIEWSTATE"],
+		"__EVENTVALIDATION":                   state["EVENTVALIDATION"],
 	})
 	if err != nil {
 		return nil, err
 	}
-	examInfos, err := parseExamRoom(res)
-	if err != nil {
-		return nil, err
-	}
-	return examInfos, nil
+
+	return parseExamRoomFromCourses(resp)
 }
 
-func parseExamRoom(doc *html.Node) ([]*ExamRoomInfo, error) {
-	var examInfos []*ExamRoomInfo
-	sel := htmlquery.FindOne(doc, "//*[@id=\"ContentPlaceHolder1_DataList_xxk\"]")
-	if sel == nil {
-		return nil, nil
-	}
-	rows := htmlquery.Find(sel, ".//tr[@onmouseover]")
-	for _, row := range rows {
-		// 提取单元格内容
-		cells := htmlquery.Find(row, "./td")
-		// 获取每一列的内容
-		courseName := strings.TrimSpace(htmlquery.InnerText(cells[0]))
-		credit := strings.TrimSpace(htmlquery.InnerText(cells[1]))
-		teacher := strings.TrimSpace(htmlquery.InnerText(cells[2]))
-		dateTimeAndLocation := strings.TrimSpace(htmlquery.InnerText(cells[3]))
-		// example: 2024年11月17日 12:30-17:30  旗山数计3-404
-		date, time, location := parseDateAndLocation(dateTimeAndLocation)
-		// 将数据存入结构体
-		examInfo := &ExamRoomInfo{
-			CourseName: courseName,
-			Credit:     credit,
-			Teacher:    teacher,
-			Date:       date,
-			Time:       time,
-			Location:   location,
+// parseExamRoomFromCourses 解析「我的选课」表格中的课程名、学分、教师和考试时间地点四列。
+func parseExamRoomFromCourses(resp *html.Node) ([]*ExamRoomInfo, error) {
+	list := htmlquery.Find(htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_DataList_xxk"]/tbody`), "tr")
+
+	// 去除第一个元素，第一个元素是标题栏，有个判断文本是“课程名称”
+	// TODO: 我们如何确保第一个元素一定是标题栏?
+	list = list[2:]
+
+	res := make([]*ExamRoomInfo, 0)
+
+	for _, node := range list {
+		// 教务处的表格HTML是不规范的，因此XPath解析会出现一些BUG
+		if strings.TrimSpace(htmlquery.SelectAttr(node, "style")) == "" {
+			continue
 		}
-		examInfos = append(examInfos, examInfo)
-	}
-	return examInfos, nil
-}
+		info := htmlquery.Find(node, `td`) // 一行的所有信息
 
-// 将日期和地点分开
-func parseDateAndLocation(dateAndLocation string) (date, time, location string) {
-	if dateAndLocation == "" {
-		return "", "", "暂无考场数据"
+		// 这个表格有12栏
+		if len(info) < 12 {
+			return nil, errno.HTMLParseError.WithMessage("get exam room info failed")
+		}
+
+		// 考场信息只需要课程名、学分、教师和考试时间地点
+		examTime := parseExamTime(strings.TrimSpace(htmlquery.InnerText(info[9])))
+		res = append(res, &ExamRoomInfo{
+			CourseName: htmlquery.OutputHTML(info[1], false),
+			Credit:     safeExtractionFirst(info[4], "span"),
+			Teacher:    htmlquery.OutputHTML(info[7], false),
+			Date:       examTime.Date,
+			Time:       examTime.Time,
+			Location:   examTime.Location,
+		})
 	}
-	array := strings.Fields(dateAndLocation)
-	date = array[0]
-	time = array[1]
-	location = array[2]
-	return
+
+	return res, nil
 }
