@@ -75,7 +75,7 @@ type Course struct {
 	AdjustRules           []CourseAdjustRule           `json:"adjustRules"`           // 调课规则
 	RawScheduleRules      string                       `json:"rawScheduleRules"`      // 上课时间地点（原始文本）
 	RawExamTime           string                       `json:"rawExamTime"`           // 考试时间地点（原始文本）
-	ExamTime              ExamTime                     `json:"examTime"`              // 考试时间地点（解析后）
+	ExamTime              *ExamTime                    `json:"examTime"`              // 考试时间地点（解析后）
 	RawAdjust             string                       `json:"rawAdjust"`             // 调课信息（原始文本）
 	Remark                string                       `json:"remark"`                // 备注
 }

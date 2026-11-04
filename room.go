@@ -17,13 +17,10 @@ limitations under the License.
 package jwch
 
 import (
-	"strings"
-
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
 
 	"github.com/west2-online/jwch/constants"
-	"github.com/west2-online/jwch/errno"
 )
 
 func (s *Student) GetEmptyRoom(req EmptyRoomReq) ([]string, error) {
@@ -268,59 +265,36 @@ func parseEmptyRoom(doc *html.Node) ([]string, error) {
 }
 
 // 考场查询
-// 与「我的选课」使用同一个数据源，但只解析考场需要的四列，避免完整解析课表。
+//
+// Deprecated: 请直接使用 GetSemesterCourses 并读取 Course.ExamTime。
 func (s *Student) GetExamRoom(req ExamRoomReq) ([]*ExamRoomInfo, error) {
-	state, err := s.getState(constants.CourseURL)
+	terms, err := s.GetTerms()
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := s.PostWithIdentifier(constants.CourseURL, map[string]string{
-		"ctl00$ContentPlaceHolder1$DDL_xnxq":  req.Term,
-		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
-		"__VIEWSTATE":                         state["VIEWSTATE"],
-		"__EVENTVALIDATION":                   state["EVENTVALIDATION"],
-	})
+	courses, err := s.GetSemesterCourses(req.Term, terms.ViewState, terms.EventValidation)
 	if err != nil {
 		return nil, err
 	}
 
-	return parseExamRoomFromCourses(resp)
-}
-
-// parseExamRoomFromCourses 解析「我的选课」表格中的课程名、学分、教师和考试时间地点四列。
-func parseExamRoomFromCourses(resp *html.Node) ([]*ExamRoomInfo, error) {
-	list := htmlquery.Find(htmlquery.FindOne(resp, `//*[@id="ContentPlaceHolder1_DataList_xxk"]/tbody`), "tr")
-
-	// 去除第一个元素，第一个元素是标题栏，有个判断文本是“课程名称”
-	// TODO: 我们如何确保第一个元素一定是标题栏?
-	list = list[2:]
-
-	res := make([]*ExamRoomInfo, 0)
-
-	for _, node := range list {
-		// 教务处的表格HTML是不规范的，因此XPath解析会出现一些BUG
-		if strings.TrimSpace(htmlquery.SelectAttr(node, "style")) == "" {
+	examInfos := make([]*ExamRoomInfo, 0, len(courses))
+	for _, course := range courses {
+		if course == nil {
 			continue
 		}
-		info := htmlquery.Find(node, `td`) // 一行的所有信息
-
-		// 这个表格有12栏
-		if len(info) < 12 {
-			return nil, errno.HTMLParseError.WithMessage("get exam room info failed")
+		examInfo := &ExamRoomInfo{
+			CourseName: course.Name,
+			Credit:     course.Credits,
+			Teacher:    course.Teacher,
+			Location:   "暂无考场数据",
 		}
-
-		// 考场信息只需要课程名、学分、教师和考试时间地点
-		examTime := parseExamTime(strings.TrimSpace(htmlquery.InnerText(info[9])))
-		res = append(res, &ExamRoomInfo{
-			CourseName: htmlquery.OutputHTML(info[1], false),
-			Credit:     safeExtractionFirst(info[4], "span"),
-			Teacher:    htmlquery.OutputHTML(info[7], false),
-			Date:       examTime.Date,
-			Time:       examTime.Time,
-			Location:   examTime.Location,
-		})
+		if course.ExamTime != nil {
+			examInfo.Date = course.ExamTime.Date
+			examInfo.Time = course.ExamTime.Time
+			examInfo.Location = course.ExamTime.Location
+		}
+		examInfos = append(examInfos, examInfo)
 	}
-
-	return res, nil
+	return examInfos, nil
 }
