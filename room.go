@@ -17,8 +17,6 @@ limitations under the License.
 package jwch
 
 import (
-	"strings"
-
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
 
@@ -267,66 +265,36 @@ func parseEmptyRoom(doc *html.Node) ([]string, error) {
 }
 
 // 考场查询
+//
+// Deprecated: 请直接使用 GetSemesterCourses 并读取 Course.ExamTime。
 func (s *Student) GetExamRoom(req ExamRoomReq) ([]*ExamRoomInfo, error) {
-	viewStateMap, err := s.getState(constants.ExamRoomQueryURL)
+	terms, err := s.GetTerms()
 	if err != nil {
 		return nil, err
 	}
-	res, err := s.PostWithIdentifier(constants.ExamRoomQueryURL, map[string]string{
-		"__VIEWSTATE":                         viewStateMap["VIEWSTATE"],
-		"__EVENTVALIDATION":                   viewStateMap["EVENTVALIDATION"],
-		"ctl00$ContentPlaceHolder1$DDL_xnxq":  req.Term,
-		"ctl00$ContentPlaceHolder1$BT_submit": "确定",
-	})
-	if err != nil {
-		return nil, err
-	}
-	examInfos, err := parseExamRoom(res)
-	if err != nil {
-		return nil, err
-	}
-	return examInfos, nil
-}
 
-func parseExamRoom(doc *html.Node) ([]*ExamRoomInfo, error) {
-	var examInfos []*ExamRoomInfo
-	sel := htmlquery.FindOne(doc, "//*[@id=\"ContentPlaceHolder1_DataList_xxk\"]")
-	if sel == nil {
-		return nil, nil
+	courses, err := s.GetSemesterCourses(req.Term, terms.ViewState, terms.EventValidation)
+	if err != nil {
+		return nil, err
 	}
-	rows := htmlquery.Find(sel, ".//tr[@onmouseover]")
-	for _, row := range rows {
-		// 提取单元格内容
-		cells := htmlquery.Find(row, "./td")
-		// 获取每一列的内容
-		courseName := strings.TrimSpace(htmlquery.InnerText(cells[0]))
-		credit := strings.TrimSpace(htmlquery.InnerText(cells[1]))
-		teacher := strings.TrimSpace(htmlquery.InnerText(cells[2]))
-		dateTimeAndLocation := strings.TrimSpace(htmlquery.InnerText(cells[3]))
-		// example: 2024年11月17日 12:30-17:30  旗山数计3-404
-		date, time, location := parseDateAndLocation(dateTimeAndLocation)
-		// 将数据存入结构体
+
+	examInfos := make([]*ExamRoomInfo, 0, len(courses))
+	for _, course := range courses {
+		if course == nil {
+			continue
+		}
 		examInfo := &ExamRoomInfo{
-			CourseName: courseName,
-			Credit:     credit,
-			Teacher:    teacher,
-			Date:       date,
-			Time:       time,
-			Location:   location,
+			CourseName: course.Name,
+			Credit:     course.Credits,
+			Teacher:    course.Teacher,
+			Location:   "暂无考场数据",
+		}
+		if course.ExamTime != nil {
+			examInfo.Date = course.ExamTime.Date
+			examInfo.Time = course.ExamTime.Time
+			examInfo.Location = course.ExamTime.Location
 		}
 		examInfos = append(examInfos, examInfo)
 	}
 	return examInfos, nil
-}
-
-// 将日期和地点分开
-func parseDateAndLocation(dateAndLocation string) (date, time, location string) {
-	if dateAndLocation == "" {
-		return "", "", "暂无考场数据"
-	}
-	array := strings.Fields(dateAndLocation)
-	date = array[0]
-	time = array[1]
-	location = array[2]
-	return
 }

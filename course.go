@@ -250,6 +250,28 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 			}
 		}
 
+		// 解析考试时间、地点
+		/*
+			2026年06月26日14:00-18:00旗山东3-106
+			2024年12月10日14:00-16:00铜盘科报厅B
+		*/
+		rawExamTime := strings.TrimSpace(htmlquery.InnerText(info[9]))
+		examTimePattern := regexp.MustCompile(`^(\d{4}年\d{1,2}月\d{1,2}日)\s*(\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2})\s*(.*)$`)
+		var examTime *ExamTime
+		if rawExamTime != "" {
+			matches := examTimePattern.FindStringSubmatch(rawExamTime)
+
+			if len(matches) < 4 {
+				return nil, errno.HTMLParseError.WithMessage("get exam time failed")
+			}
+
+			examTime = &ExamTime{
+				Date:     matches[1],
+				Time:     strings.ReplaceAll(matches[2], " ", ""),
+				Location: strings.TrimSpace(matches[3]),
+			}
+		}
+
 		// TODO: performance optimization
 		res = append(res, &Course{
 			Type:       htmlquery.OutputHTML(info[0], false),
@@ -265,7 +287,8 @@ func (s *Student) GetSemesterCourses(term, viewState, eventValidation string) ([
 			AdjustRules:           adjustRules,
 			FullWeekScheduleRules: fullWeekScheduleRules,
 			RawScheduleRules:      strings.Join(courseInfo8, "\n"),
-			RawExamTime:           strings.TrimSpace(htmlquery.InnerText(info[9])),
+			RawExamTime:           rawExamTime,
+			ExamTime:              examTime,
 			RawAdjust:             strings.Join(courseInfo11, "\n"),
 			Remark:                htmlquery.OutputHTML(info[10], false),
 		})
