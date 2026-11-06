@@ -42,8 +42,7 @@ type classroomUsagePageState struct {
 
 // GetClassroomBuildings 获取指定校区的全部教学楼列表
 func (s *Student) GetClassroomBuildings(ctx context.Context, campus string) ([]string, error) {
-	location := time.FixedZone("Asia/Shanghai", 8*60*60)
-	date := time.Now().In(location).Format(time.DateOnly)
+	date := time.Now().Format(time.DateOnly)
 	page, err := s.classroomUsagePage(ctx, date, "", campus)
 	if err != nil {
 		return nil, err
@@ -51,91 +50,81 @@ func (s *Student) GetClassroomBuildings(ctx context.Context, campus string) ([]s
 	return page.buildings, nil
 }
 
-// GetClassroomUsage 查询每个教学楼的教室使用总表
+// GetClassroomUsage 查询教室使用总表
 func (s *Student) GetClassroomUsage(ctx context.Context, req ClassroomUsageReq) (*ClassroomUsage, error) {
 	date, err := time.Parse(time.DateOnly, req.Date)
 	if err != nil {
 		return nil, fmt.Errorf("invalid classroom date: %w", err)
 	}
-	for _, building := range req.Buildings {
-		if strings.TrimSpace(building) == "" {
-			return nil, fmt.Errorf("classroom building is required")
-		}
-	}
 	page, err := s.classroomUsagePage(ctx, req.Date, req.Term, req.Campus)
 	if err != nil {
 		return nil, err
 	}
-	doc := page.document
 	term := page.term
-	available := page.buildings
 	buildings := req.Buildings
-	if len(buildings) == 0 {
-		buildings = available
-	}
-	allowed := make(map[string]bool, len(available))
-	for _, building := range available {
-		allowed[building] = true
-	}
-	for _, building := range buildings {
-		if !allowed[building] {
-			return nil, fmt.Errorf("classroom usage page has no building %s for %s", building, req.Campus)
-		}
-	}
 	usage := &ClassroomUsage{Date: req.Date, Term: term, Rooms: make([]*ClassroomUsageRoom, 0)}
+
+	channels := make([]chan []*ClassroomUsageRoom, 0, len(buildings))
 	seen := make(map[string]bool, len(buildings))
 	for _, building := range buildings {
 		if seen[building] {
 			continue
 		}
 		seen[building] = true
-		doc, err = s.postClassroomUsage(ctx, doc, req.Date, term, req.Campus, building, "ctl00$jxldpl")
-		if err != nil {
-			return nil, fmt.Errorf("select building %s: %w", building, err)
-		}
-		if selectedValue(doc, "xnxqdpl") != term || selectedValue(doc, "xqdpl") != req.Campus ||
-			selectedValue(doc, "jxldpl") != building {
-			return nil, fmt.Errorf("classroom usage page did not select building %s", building)
-		}
-		selector := htmlquery.FindOne(doc, "//*[@id='jsdpl']")
-		if selector == nil {
-			return nil, fmt.Errorf("classroom usage page has no room selector for %s", building)
-		}
-		hasRooms := false
-		for _, option := range htmlquery.Find(selector, "./option") {
-			if htmlquery.SelectAttr(option, "value") != "" {
-				hasRooms = true
-				break
+		ch := make(chan []*ClassroomUsageRoom, 1)
+		channels = append(channels, ch)
+		go func(building string, ch chan []*ClassroomUsageRoom) {
+			var rooms []*ClassroomUsageRoom
+			var err error
+			defer func() {
+				// 不影响其他建筑查询结果
+				if err != nil {
+					rooms = []*ClassroomUsageRoom{{
+						Building:    building,
+						Error:       err,
+						Occupancies: make([]*ClassroomUsageOccupancy, 0),
+					}}
+				}
+				ch <- rooms
+			}()
+			doc, err := s.postClassroomUsage(ctx, page.document, req.Date, term, req.Campus, building)
+			if err != nil {
+				return
 			}
-		}
-		if !hasRooms {
-			continue
-		}
-		doc, err = s.postClassroomUsage(ctx, doc, req.Date, term, req.Campus, building, "")
-		if err != nil {
-			return nil, err
-		}
-		if selectedValue(doc, "xnxqdpl") != term || selectedValue(doc, "xqdpl") != req.Campus ||
-			selectedValue(doc, "jxldpl") != building || safeExtractionValue(doc, "//*[@id='TB_rq']", "value", 0) != req.Date {
-			return nil, fmt.Errorf("classroom usage response does not match query for %s", building)
-		}
-		rooms, err := parseClassroomUsage(doc, date.Weekday())
-		if err != nil {
-			return nil, fmt.Errorf("parse building %s: %w", building, err)
-		}
-		for _, room := range rooms {
-			room.Building = building
-		}
-		usage.Rooms = append(usage.Rooms, rooms...)
+			selector := htmlquery.FindOne(doc, "//*[@id='jsdpl']")
+			if selector == nil {
+				err = fmt.Errorf("classroom usage page has no room selector for %s", building)
+				return
+			}
+			hasRooms := false
+			for _, option := range htmlquery.Find(selector, "./option") {
+				if htmlquery.SelectAttr(option, "value") != "" {
+					hasRooms = true
+					break
+				}
+			}
+			if !hasRooms {
+				return
+			}
+			rooms, err = parseClassroomUsage(doc, date.Weekday())
+			if err != nil {
+				err = fmt.Errorf("parse building %s: %w", building, err)
+				return
+			}
+			for _, room := range rooms {
+				room.Building = building
+			}
+		}(building, ch)
+	}
+
+	for _, ch := range channels {
+		usage.Rooms = append(usage.Rooms, (<-ch)...)
 	}
 	return usage, nil
 }
 
 func (s *Student) classroomUsagePage(ctx context.Context, date, requestedTerm, campus string) (*classroomUsagePageState, error) {
-	if strings.TrimSpace(campus) == "" {
-		return nil, fmt.Errorf("classroom campus is required")
-	}
-	if err := s.waitForRequest(ctx); err != nil {
+	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	doc, err := s.GetWithIdentifier(classroomUsageURL)
@@ -144,27 +133,20 @@ func (s *Student) classroomUsagePage(ctx context.Context, date, requestedTerm, c
 	}
 	term := requestedTerm
 	if term == "" {
-		term = selectedValue(doc, "xnxqdpl")
-	}
-	if term == "" {
-		return nil, fmt.Errorf("classroom usage page has no selected academic term")
-	}
-	if selectedValue(doc, "xnxqdpl") != term {
-		doc, err = s.postClassroomUsage(ctx, doc, date, term, selectedValue(doc, "xqdpl"), "", "ctl00$xnxqdpl")
-		if err != nil {
-			return nil, err
+		// term 为空选择默认学期
+		term = safeExtractionValue(doc, "//*[@id='xnxqdpl']/option[@selected]", "value", 0)
+		// 取不到默认值回退第一个
+		if term == "" {
+			term = safeExtractionValue(doc, "//*[@id='xnxqdpl']/option", "value", 0)
+		}
+		// 仍然为空报错
+		if term == "" {
+			return nil, fmt.Errorf("classroom usage page has no selected academic term")
 		}
 	}
-	if selectedValue(doc, "xqdpl") != campus || safeExtractionValue(doc, "//*[@id='TB_rq']", "value", 0) != date {
-		doc, err = s.postClassroomUsage(ctx, doc, date, term, campus, "", "ctl00$xqdpl")
-		if err != nil {
-			return nil, fmt.Errorf("select campus %s: %w", campus, err)
-		}
-	}
-	if selectedValue(doc, "xqdpl") != campus ||
-		selectedValue(doc, "xnxqdpl") != term ||
-		safeExtractionValue(doc, "//*[@id='TB_rq']", "value", 0) != date {
-		return nil, fmt.Errorf("classroom usage page did not select date %s, term %s, campus %s", date, term, campus)
+	doc, err = s.postClassroomUsage(ctx, doc, date, term, campus, "")
+	if err != nil {
+		return nil, fmt.Errorf("select campus %s: %w", campus, err)
 	}
 	buildings := make([]string, 0)
 	seen := make(map[string]bool)
@@ -175,9 +157,6 @@ func (s *Student) classroomUsagePage(ctx context.Context, date, requestedTerm, c
 			seen[building] = true
 		}
 	}
-	if len(buildings) == 0 {
-		return nil, fmt.Errorf("classroom usage page has no buildings for %s", campus)
-	}
 	return &classroomUsagePageState{
 		document:  doc,
 		term:      term,
@@ -185,14 +164,22 @@ func (s *Student) classroomUsagePage(ctx context.Context, date, requestedTerm, c
 	}, nil
 }
 
-func (s *Student) postClassroomUsage(ctx context.Context, doc *html.Node, date, term, campus, building, target string) (*html.Node, error) {
-	form := map[string]string{
-		"__EVENTTARGET": target, "__EVENTARGUMENT": "", "__LASTFOCUS": "",
-		"ctl00$TB_rq": date, "ctl00$xnxqdpl": term, "ctl00$xqdpl": campus, "ctl00$jxldpl": building,
-		"ctl00$qszdpl": "", "ctl00$qsxqdpl": "", "ctl00$qsjdpl": "", "ctl00$zzjdpl": "",
+func (s *Student) postClassroomUsage(ctx context.Context, doc *html.Node, date, term, campus, building string) (*html.Node, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	if target == "" {
-		form["ctl00$ContentPlaceHolder1$BT_search"] = "查询"
+	form := map[string]string{
+		"ctl00$TB_rq":                         date,
+		"ctl00$xnxqdpl":                       term,
+		"ctl00$xqdpl":                         campus,
+		"ctl00$qszdpl":                        "",
+		"ctl00$qsxqdpl":                       "",
+		"ctl00$qsjdpl":                        "",
+		"ctl00$zzjdpl":                        "",
+		"ctl00$ContentPlaceHolder1$BT_search": "查询",
+	}
+	if building != "" {
+		form["ctl00$jxldpl"] = building
 	}
 	for _, option := range htmlquery.Find(doc, "//*[@id='jsdpl']/option") {
 		if htmlquery.SelectAttr(option, "value") == "" {
@@ -206,33 +193,27 @@ func (s *Student) postClassroomUsage(ctx context.Context, doc *html.Node, date, 
 			form[name] = htmlquery.SelectAttr(input, "value")
 		}
 	}
-	if form["__VIEWSTATE"] == "" || form["__EVENTVALIDATION"] == "" {
-		return nil, fmt.Errorf("classroom usage page is missing ASP.NET state (session may have expired)")
-	}
-	if err := s.waitForRequest(ctx); err != nil {
-		return nil, err
-	}
 	doc, err := s.PostWithIdentifier(classroomUsageURL, form)
-	if err != nil && target == "" {
+	if err != nil {
 		return nil, fmt.Errorf("query building %s: %w", building, err)
 	}
 	return doc, err
 }
 
-func parseClassroomUsageReason(rawText, reason string) (string, int32, int32) {
+func parseClassroomUsageEvent(rawText, event string) (string, int32, int32) {
 	matches := classroomUsageWeekRangePattern.FindStringSubmatch(rawText)
 	if len(matches) != 3 {
-		return reason, 0, 0
+		return event, 0, 0
 	}
 	startWeek, err := strconv.ParseInt(matches[1], 10, 32)
 	if err != nil {
-		return reason, 0, 0
+		return event, 0, 0
 	}
 	endWeek, err := strconv.ParseInt(matches[2], 10, 32)
 	if err != nil {
-		return reason, 0, 0
+		return event, 0, 0
 	}
-	return strings.TrimSpace(strings.TrimSuffix(reason, matches[0])), int32(startWeek), int32(endWeek)
+	return strings.TrimSpace(strings.TrimSuffix(event, matches[0])), int32(startWeek), int32(endWeek)
 }
 
 const (
@@ -355,34 +336,34 @@ func parseClassroomUsage(doc *html.Node, weekday time.Weekday) ([]*ClassroomUsag
 			for section := 1; section <= sectionsPerDay; section++ {
 				column := (day-1)*sectionsPerDay + section
 				raw := normalizedHTMLText(roomRows[i][column])
-				detail := ""
+				occupant := ""
 				if i+1 < len(roomRows) {
-					detail = normalizedHTMLText(roomRows[i+1][column])
+					occupant = normalizedHTMLText(roomRows[i+1][column])
 				}
-				if raw == "" && detail == "" {
+				if raw == "" && occupant == "" {
 					previous = nil
 					continue
 				}
 				// 讲座、补课等连续活动可能只在起始节次写班级或使用单位，后续节次详情为空时仍可合并到前一条占用记录
-				if previous != nil && previous.RawText == raw && (detail == "" || detail == previous.Detail) {
+				if previous != nil && previous.RawText == raw && (occupant == "" || occupant == previous.Occupant) {
 					previous.End = int32(section)
 					continue
 				}
-				reason := raw
+				event := raw
 				if font := htmlquery.FindOne(roomRows[i][column], ".//font"); font != nil {
-					reason = strings.TrimSuffix(normalizedHTMLText(font), "()")
+					event = strings.TrimSuffix(normalizedHTMLText(font), "()")
 				}
-				if reason == "" {
-					reason = detail
+				if event == "" {
+					event = occupant
 				}
-				reason, startWeek, endWeek := parseClassroomUsageReason(raw, reason)
+				event, startWeek, endWeek := parseClassroomUsageEvent(raw, event)
 				// 一个小兜底，教务处的week信息有点乱，如果解析出错就直接传rawtext
 				if startWeek == 0 || endWeek == 0 {
-					reason = raw
+					event = raw
 				}
 				previous = &ClassroomUsageOccupancy{
 					Start: int32(section), End: int32(section), StartWeek: startWeek, EndWeek: endWeek,
-					Reason: reason, Detail: detail, RawText: raw,
+					Event: event, Occupant: occupant, RawText: raw,
 				}
 				room.Occupancies = append(room.Occupancies, previous)
 			}

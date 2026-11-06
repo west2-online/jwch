@@ -231,16 +231,29 @@ func Test_GetClassroomBuildings(t *testing.T) {
 }
 
 func Test_GetClassroomUsage(t *testing.T) {
-	location := time.FixedZone("Asia/Shanghai", 8*60*60)
-	usage, err := stu.GetClassroomUsage(context.Background(), ClassroomUsageReq{
-		Date:      time.Now().In(location).Format(time.DateOnly),
-		Campus:    "旗山校区",
-		Buildings: []string{"公共教学楼东3"},
-	})
-	if err != nil {
-		t.Fatal(err)
+	for _, campus := range []string{"旗山校区", "晋江校区", "铜盘校区", "泉港校区", "怡山校区", "厦门工艺美院"} {
+		buildings, err := stu.GetClassroomBuildings(context.Background(), campus)
+		if err != nil {
+			t.Fatal(err)
+		}
+		usage, err := stu.GetClassroomUsage(context.Background(), ClassroomUsageReq{
+			Date:      time.Now().Format(time.DateOnly),
+			Campus:    campus,
+			Buildings: buildings,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fmt.Println(utils.PrintStruct(usage))
+
+		for _, room := range usage.Rooms {
+			if room.Error != nil {
+				t.Fatal(room.Error)
+			}
+		}
 	}
-	fmt.Println(utils.PrintStruct(usage))
+
 }
 
 func Test_GetSchoolCalendar(t *testing.T) {

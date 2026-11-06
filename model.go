@@ -18,7 +18,6 @@ package jwch
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -30,9 +29,8 @@ type Student struct {
 	cookies  []*http.Cookie // cookies中将包含session_id和其他数据
 	// 如果我们使用client进行登陆的话，此时该字段失效，因为client会在登录时自动保存登陆凭证（session）
 	// 所以该字段用于其他服务调用时传递登陆凭证
-	Identifier   string        // 位于url上id=....的一个标识符，主要用于组成url
-	client       *resty.Client // Request对象
-	requestDelay time.Duration // 请求之间的间隔
+	Identifier string        // 位于url上id=....的一个标识符，主要用于组成url
+	client     *resty.Client // Request对象
 }
 
 // 学生信息详情
@@ -142,14 +140,12 @@ type EmptyRoomReq struct {
 	Building string `form:"build" binding:"required"` // 教学楼名
 }
 
-// ClassroomUsageReq 批量查询同一日期、校区和学期下多个教学楼的教室占用情况。
-// Term 可省略，默认使用教务处页面当前选中的学年学期。
-// Buildings 为空时查询该校区全部教学楼，重复值只查询一次。
+// 教室占用请求
 type ClassroomUsageReq struct {
-	Date      string
-	Campus    string
-	Term      string
-	Buildings []string
+	Date      string   // 查询日期，格式为 YYYY-MM-DD
+	Campus    string   // 校区名称
+	Term      string   // 学年学期，为空时使用页面默认学期
+	Buildings []string // 教学楼名称列表
 }
 
 type ClassroomUsage struct {
@@ -160,22 +156,20 @@ type ClassroomUsage struct {
 
 type ClassroomUsageRoom struct {
 	Building    string                     `json:"building"`
+	Error       error                      `json:"error,omitempty"`
 	Location    string                     `json:"location"`
 	Capacity    string                     `json:"capacity"`
 	Type        string                     `json:"type"`
 	Occupancies []*ClassroomUsageOccupancy `json:"occupancies"`
 }
 
-// Reason、Detail 分别保留教务处的课程或活动名称、班级或使用单位。
-// RawText 还保留原始周次标注；页面已按 Date 筛选，
-// 无需再根据周次推算课程是否发生在查询日期。
 type ClassroomUsageOccupancy struct {
 	Start     int32  `json:"start"`
 	End       int32  `json:"end"`
 	StartWeek int32  `json:"start_week"`
 	EndWeek   int32  `json:"end_week"`
-	Reason    string `json:"reason"`
-	Detail    string `json:"detail"`
+	Event     string `json:"event"`
+	Occupant  string `json:"occupant"`
 	RawText   string `json:"raw_text"`
 }
 

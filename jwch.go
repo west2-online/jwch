@@ -17,23 +17,20 @@ limitations under the License.
 package jwch
 
 import (
-	"bytes"
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"net/http"
 	"strings"
-	"time"
+	"unicode/utf8"
 
 	"github.com/west2-online/jwch/constants"
 	"github.com/west2-online/jwch/errno"
+	"github.com/west2-online/jwch/utils"
 
 	"github.com/antchfx/htmlquery"
 	"github.com/go-resty/resty/v2"
 	"golang.org/x/net/html"
 )
-
-const defaultRequestDelay = 200 * time.Millisecond
 
 func NewStudent() *Student {
 	// 从环境变量加载配置
@@ -62,32 +59,7 @@ func NewStudent() *Student {
 		SetRedirectPolicy(resty.NoRedirectPolicy())
 
 	return &Student{
-		client:       client,
-		requestDelay: defaultRequestDelay,
-	}
-}
-
-// WithRequestDelay 设置请求前的等待时间，等于 0 时不等待
-func (s *Student) WithRequestDelay(delay time.Duration) *Student {
-	s.requestDelay = max(delay, 0)
-	return s
-}
-
-// waitForRequest 等待配置的请求间隔，并在上下文取消时提前返回。
-func (s *Student) waitForRequest(ctx context.Context) error {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	if s.requestDelay <= 0 {
-		return nil
-	}
-	timer := time.NewTimer(s.requestDelay)
-	defer timer.Stop()
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		return ctx.Err()
+		client: client,
 	}
 }
 
@@ -157,7 +129,7 @@ func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 	if strings.Contains(text, "重新登录") {
 		return nil, errno.CookieError
 	}
-	if strings.Contains(string(resp.Body()), "请先对任课教师进行测评") {
+	if strings.Contains(text, "请先对任课教师进行测评") || strings.Contains(text, "请先对任课教师和教材进行测评") {
 		return nil, errno.EvaluationNotFoundError
 	}
 	doc, err := htmlquery.Parse(strings.NewReader(strings.TrimSpace(text)))
@@ -207,10 +179,17 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 	if strings.Contains(text, "重新登录") {
 		return nil, errno.CookieError
 	}
-	if strings.Contains(string(resp.Body()), "请先对任课教师进行测评") {
+	if strings.Contains(text, "请先对任课教师进行测评") || strings.Contains(text, "请先对任课教师和教材进行测评") {
 		return nil, errno.EvaluationNotFoundError
 	}
-	return htmlquery.Parse(strings.NewReader(strings.TrimSpace(string(resp.Body()))))
+	doc, err := htmlquery.Parse(strings.NewReader(strings.TrimSpace(text)))
+	if err != nil {
+		return nil, err
+	}
+	if strings.Contains(text, "处理URL失败") {
+		return nil, errno.HTTPQueryError.WithMessage(normalizedHTMLText(doc))
+	}
+	return doc, nil
 }
 
 // GetValidateCode 获取验证码
