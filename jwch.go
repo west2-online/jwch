@@ -146,15 +146,28 @@ func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 		return nil, errno.CookieError
 	}
 
-	// 还有一种情况是 id 或 cookie 缺失或者解析错误 TODO: 判断条件有点简陋
-	if strings.Contains(string(resp.Body()), "重新登录") {
+	text := string(resp.Body())
+	// 正常页面可能已是 UTF-8，教务处错误页仍使用 GB2312 (Fuck GBK)
+	if !utf8.Valid(resp.Body()) {
+		text, err = utils.ConvertGB2312ToUTF8(resp.Body())
+		if err != nil {
+			return nil, errno.HTMLParseError.WithErr(err)
+		}
+	}
+	if strings.Contains(text, "重新登录") {
 		return nil, errno.CookieError
 	}
 	if strings.Contains(string(resp.Body()), "请先对任课教师进行测评") {
 		return nil, errno.EvaluationNotFoundError
 	}
-
-	return htmlquery.Parse(bytes.NewReader(resp.Body()))
+	doc, err := htmlquery.Parse(strings.NewReader(strings.TrimSpace(text)))
+	if err != nil {
+		return nil, err
+	}
+	if strings.Contains(text, "处理URL失败") {
+		return nil, errno.HTTPQueryError.WithMessage(normalizedHTMLText(doc))
+	}
+	return doc, nil
 }
 
 // PostWithIdentifier returns parse tree for the resp of the request.
@@ -184,8 +197,14 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 		return nil, errno.JwchNetworkError.WithErr(err)
 	}
 
-	// id 或 cookie 缺失或者解析错误 TODO: 判断条件有点简陋
-	if strings.Contains(string(resp.Body()), "处理URL失败") {
+	text := string(resp.Body())
+	if !utf8.Valid(resp.Body()) {
+		text, err = utils.ConvertGB2312ToUTF8(resp.Body())
+		if err != nil {
+			return nil, errno.HTMLParseError.WithErr(err)
+		}
+	}
+	if strings.Contains(text, "重新登录") {
 		return nil, errno.CookieError
 	}
 	if strings.Contains(string(resp.Body()), "请先对任课教师进行测评") {

@@ -23,7 +23,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"reflect"
@@ -162,7 +162,7 @@ func ConvertGB2312ToUTF8(input []byte) (string, error) {
 	reader := transform.NewReader(bytes.NewReader(input), simplifiedchinese.GB18030.NewDecoder())
 
 	// 将转换后的结果读取为 UTF-8 字符串
-	utf8Bytes, err := ioutil.ReadAll(reader)
+	utf8Bytes, err := io.ReadAll(reader)
 	if err != nil {
 		return "", err
 	}
