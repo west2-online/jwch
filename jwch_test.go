@@ -253,7 +253,6 @@ func Test_GetClassroomUsage(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func Test_GetSchoolCalendar(t *testing.T) {
