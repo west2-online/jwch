@@ -18,9 +18,12 @@ package jwch
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
+
+	"github.com/west2-online/jwch/utils"
 )
 
 // Safely extract data from html node by expression
@@ -47,6 +50,14 @@ func safeExtractionValue(node *html.Node, expr string, value string, index int) 
 	}
 
 	return htmlquery.SelectAttr(res[index], value)
+}
+
+// normalizedHTMLText extracts text while treating line breaks as whitespace.
+func normalizedHTMLText(node *html.Node) string {
+	if node == nil {
+		return ""
+	}
+	return strings.Join(strings.Fields(utils.InnerTextWithBr(node)), " ")
 }
 
 // Safely extract data by regex

@@ -148,6 +148,39 @@ type EmptyRoomReq struct {
 	Building string `form:"build" binding:"required"` // 教学楼名
 }
 
+// 教室占用请求
+type ClassroomUsageReq struct {
+	Date      string   // 查询日期，格式为 YYYY-MM-DD
+	Campus    string   // 校区名称
+	Term      string   // 学年学期，为空时使用页面默认学期
+	Buildings []string // 教学楼名称列表
+}
+
+type ClassroomUsage struct {
+	Date  string                `json:"date"`
+	Term  string                `json:"term"`
+	Rooms []*ClassroomUsageRoom `json:"rooms"`
+}
+
+type ClassroomUsageRoom struct {
+	Building    string                     `json:"building"`
+	Error       error                      `json:"error,omitempty"`
+	Location    string                     `json:"location"`
+	Capacity    string                     `json:"capacity"`
+	Type        string                     `json:"type"`
+	Occupancies []*ClassroomUsageOccupancy `json:"occupancies"`
+}
+
+type ClassroomUsageOccupancy struct {
+	Start     int32  `json:"start"`
+	End       int32  `json:"end"`
+	StartWeek int32  `json:"start_week"`
+	EndWeek   int32  `json:"end_week"`
+	Event     string `json:"event"`
+	Occupant  string `json:"occupant"`
+	RawText   string `json:"raw_text"`
+}
+
 // 校历
 type SchoolCalendar struct {
 	CurrentTerm string    `json:"currentTerm"` // 当前学期
