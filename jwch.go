@@ -111,35 +111,12 @@ func (s *Student) GetWithIdentifier(url string) (*html.Node, error) {
 			if errRedirected != nil {
 				return nil, errno.CookieError
 			}
-			if strings.Contains(string(respRedirected.Body()), "请先对任课教师和教材进行测评") {
-				return nil, errno.EvaluationNotFoundError
-			}
+			return parseJwchResponse(respRedirected.Body())
 		}
 		return nil, errno.CookieError
 	}
 
-	text := string(resp.Body())
-	// 正常页面可能已是 UTF-8，教务处错误页仍使用 GB2312 (Fuck GBK)
-	if !utf8.Valid(resp.Body()) {
-		text, err = utils.ConvertGB2312ToUTF8(resp.Body())
-		if err != nil {
-			return nil, errno.HTMLParseError.WithErr(err)
-		}
-	}
-	if strings.Contains(text, "重新登录") {
-		return nil, errno.CookieError
-	}
-	if strings.Contains(text, "请先对任课教师进行测评") || strings.Contains(text, "请先对任课教师和教材进行测评") {
-		return nil, errno.EvaluationNotFoundError
-	}
-	doc, err := htmlquery.Parse(strings.NewReader(strings.TrimSpace(text)))
-	if err != nil {
-		return nil, err
-	}
-	if strings.Contains(text, "处理URL失败") {
-		return nil, errno.HTTPQueryError.WithMessage(normalizedHTMLText(doc))
-	}
-	return doc, nil
+	return parseJwchResponse(resp.Body())
 }
 
 // PostWithIdentifier returns parse tree for the resp of the request.
@@ -162,34 +139,12 @@ func (s *Student) PostWithIdentifier(url string, formData map[string]string) (*h
 			if errRedirected != nil {
 				return nil, errno.JwchNetworkError.WithErr(err)
 			}
-			if strings.Contains(string(respRedirected.Body()), "请先对任课教师进行测评") {
-				return nil, errno.EvaluationNotFoundError
-			}
+			return parseJwchResponse(respRedirected.Body())
 		}
 		return nil, errno.JwchNetworkError.WithErr(err)
 	}
 
-	text := string(resp.Body())
-	if !utf8.Valid(resp.Body()) {
-		text, err = utils.ConvertGB2312ToUTF8(resp.Body())
-		if err != nil {
-			return nil, errno.HTMLParseError.WithErr(err)
-		}
-	}
-	if strings.Contains(text, "重新登录") {
-		return nil, errno.CookieError
-	}
-	if strings.Contains(text, "请先对任课教师进行测评") || strings.Contains(text, "请先对任课教师和教材进行测评") {
-		return nil, errno.EvaluationNotFoundError
-	}
-	doc, err := htmlquery.Parse(strings.NewReader(strings.TrimSpace(text)))
-	if err != nil {
-		return nil, err
-	}
-	if strings.Contains(text, "处理URL失败") {
-		return nil, errno.HTTPQueryError.WithMessage(normalizedHTMLText(doc))
-	}
-	return doc, nil
+	return parseJwchResponse(resp.Body())
 }
 
 // GetValidateCode 获取验证码
@@ -210,4 +165,31 @@ func GetValidateCode(image string) (string, error) {
 		return "", errno.HTTPQueryError.WithErr(err)
 	}
 	return code.Message, nil
+}
+
+func parseJwchResponse(body []byte) (*html.Node, error) {
+	text := string(body)
+	// 教务处部分页面仍使用 GB2312（校历、处理URL失败）
+	if !utf8.Valid(body) {
+		decoded, err := utils.ConvertGB2312ToUTF8(body)
+		if err != nil {
+			return nil, errno.HTMLParseError.WithErr(err)
+		}
+		text = decoded
+	}
+	if strings.Contains(text, "重新登录") {
+		return nil, errno.CookieError
+	}
+	// 暂时不清楚「请先对任课教师进行测评」还有没有使用，所以先保留
+	if strings.Contains(text, "请先对任课教师进行测评") || strings.Contains(text, "请先对任课教师和教材进行测评") {
+		return nil, errno.EvaluationNotFoundError
+	}
+	doc, err := htmlquery.Parse(strings.NewReader(strings.TrimSpace(text)))
+	if err != nil {
+		return nil, err
+	}
+	if strings.Contains(text, "处理URL失败") {
+		return nil, errno.HTTPQueryError.WithMessage(normalizedHTMLText(doc))
+	}
+	return doc, nil
 }

@@ -320,7 +320,7 @@ func TestGetUnifiedExam(t *testing.T) {
 // 考场信息
 func TestGetExamRoomInfo(t *testing.T) {
 	rooms, err := stu.GetExamRoom(ExamRoomReq{
-		Term: "202401",
+		Term: "202601",
 	})
 	if err != nil {
 		t.Error(err)
