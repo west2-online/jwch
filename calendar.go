@@ -21,8 +21,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/west2-online/jwch/utils"
-
 	"github.com/antchfx/htmlquery"
 
 	"github.com/west2-online/jwch/constants"
@@ -40,10 +38,6 @@ func (s *Student) GetSchoolCalendar() (*SchoolCalendar, error) {
 	}
 
 	rawCurTerm := htmlquery.InnerText(curTermNode)
-	rawCurTerm, err = utils.ConvertGB2312ToUTF8([]byte(rawCurTerm))
-	if err != nil {
-		return nil, err
-	}
 	curTermRegex := regexp.MustCompile(`当前学期：(\d{6})`)
 	curTermMatch := curTermRegex.FindStringSubmatch(rawCurTerm)
 	if len(curTermMatch) < 2 {
@@ -113,7 +107,6 @@ func (s *Student) GetTermEvents(termId string) (*CalTermEvents, error) {
 	}
 	rawTermDetail := htmlquery.InnerText(table)
 	rawTermDetail = strings.ReplaceAll(rawTermDetail, " ", " ")
-	rawTermDetail, _ = utils.ConvertGB2312ToUTF8([]byte(rawTermDetail))
 
 	termDetail := strings.Split(rawTermDetail, "；")
 
